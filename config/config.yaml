@@ -1,0 +1,54 @@
+testing:
+  sampling:
+    measurements_count: 100
+    total_duration_seconds: NULL
+    sampling_frequency_hz: 2
+  # Seconds the client waits for an answer before the sample counts as failed.
+  timeout_seconds: 2
+
+ammeters:
+  greenlee:
+    port: 5000
+    command: 'MEASURE_GREENLEE -get_measurement'
+  entes:
+    port: 5001
+    command: 'MEASURE_ENTES -get_data'
+  circutor:
+    port: 5002
+    command: 'MEASURE_CIRCUTOR -get_measurement'
+
+report:
+  # Folder for the HTML reports made with --report or --show-report.
+  output_dir: results/reports
+  # How many earlier runs of every ammeter the history chart shows.
+  history_runs: 8
+  # 'pytest --report' measures the same number of samples as testing.sampling above,
+  # but at this faster rate, so the test run does not take minutes.
+  pytest_frequency_hz: 50
+
+error_simulation:
+  # Make the emulators fail on purpose, to see how the framework copes. Also: python main.py --simulate-errors
+  enabled: false
+  # A fixed seed repeats the same faults on every run, NULL gives different faults every run.
+  seed: NULL
+  # How late a 'delay' answer comes. Longer than testing.timeout_seconds makes the sample fail.
+  delay_seconds: 3
+  # How much a 'spike' multiplies the real value.
+  spike_factor: 50
+  # Probability of each fault per sample, between 0 and 1. Leave an ammeter out to keep it healthy.
+  ammeters:
+    greenlee:
+      no_reply: 0.05
+    entes:
+      invalid_reply: 0.05
+      spike: 0.05
+    circutor:
+      delay: 0.03
+
+result_management:
+  results_dir: results/runs
+
+logging:
+  log_dir: results/logs
+  console_level: INFO
+  file_level: DEBUG

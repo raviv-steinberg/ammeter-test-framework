@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammeter Test Report</title>
+<style>
+/*BASE_CSS*/
+:root { --bg: #eef0f7; --tile: rgba(255,255,255,.78); --tile-solid: #fff; --text: #14142b; --muted: #6e7191; --border: rgba(20,20,43,.08); --grid: rgba(20,20,43,.07); --accent: #7c3aed; --tip-bg: #14142b; --tip-text: #fff; --bad: #dc2626; --warn: #d97706; --hero-a: #7c3aed; --hero-b: #2563eb; --hero-c: #10b981; }
+[data-theme="dark"] { --bg: #07070f; --tile: rgba(22,22,40,.72); --tile-solid: #16162a; --text: #f0f0ff; --muted: #9a9cc0; --border: rgba(255,255,255,.08); --grid: rgba(255,255,255,.06); --accent: #a78bfa; --tip-bg: #f0f0ff; --tip-text: #07070f; --bad: #f87171; --warn: #fbbf24; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI Variable", "Segoe UI", -apple-system, Roboto, sans-serif; font-size: 14px; min-height: 100vh; }
+body::before { content: ""; position: fixed; inset: -20%; z-index: -1; background: radial-gradient(40% 40% at 15% 10%, color-mix(in srgb, var(--hero-a) 22%, transparent), transparent), radial-gradient(35% 35% at 90% 20%, color-mix(in srgb, var(--hero-b) 18%, transparent), transparent), radial-gradient(40% 40% at 60% 100%, color-mix(in srgb, var(--hero-c) 16%, transparent), transparent); filter: blur(20px); }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 22px 24px 50px; }
+.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.brand { font-weight: 800; letter-spacing: -.01em; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+.brand i { width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, var(--hero-a), var(--hero-c)); display: inline-block; }
+.actions { display: flex; gap: 8px; position: relative; }
+.icon-btn { width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--border); background: var(--tile); backdrop-filter: blur(14px); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { color: var(--accent); }
+.panel { position: absolute; right: 0; top: 52px; width: 250px; background: var(--tile-solid); border: 1px solid var(--border); border-radius: 18px; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.18); z-index: 20; display: none; }
+.panel.open { display: block; animation: pop .16s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.panel h4 { margin: 2px 4px 10px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.opt { display: flex; align-items: center; justify-content: space-between; padding: 8px 6px; border-radius: 10px; cursor: pointer; }
+.opt:hover { background: var(--grid); }
+.opt input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.t { background: var(--tile); backdrop-filter: blur(18px); border: 1px solid var(--border); border-radius: 22px; padding: 20px; min-width: 0; }
+.t h3 { margin: 0 0 2px; font-size: 15px; }
+.t .hint { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; }
+.no-data { display: none !important; }
+.hero { position: relative; overflow: hidden; color: #fff; background: linear-gradient(130deg, var(--hero-a), var(--hero-b) 60%, var(--hero-c)); border: none; padding: 30px; }
+.hero.failed { background: linear-gradient(130deg, #b91c1c, #7c2d12); }
+.hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.12); }
+.hero .k { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; opacity: .85; font-weight: 700; }
+.hero h1 { font-size: 40px; margin: 8px 0 8px; letter-spacing: -.03em; line-height: 1.05; }
+.hero p { margin: 0; opacity: .92; max-width: 600px; line-height: 1.55; }
+.hero .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; position: relative; z-index: 1; }
+.hero .chips span { background: rgba(255,255,255,.18); padding: 5px 11px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; height: 230px; padding-top: 10px; }
+.step { flex: 1; max-width: 120px; text-align: center; }
+.step .bar { border-radius: 14px 14px 6px 6px; display: grid; place-items: start center; padding-top: 10px; font-size: 26px; font-weight: 900; color: #fff; }
+.step .nm { font-weight: 800; margin-bottom: 2px; }
+.step .cv { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.stat-tile { display: flex; flex-direction: column; justify-content: space-between; }
+.stat-tile .n { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.stat-tile .n.bad { color: var(--bad); }
+.meter-tile { position: relative; overflow: hidden; }
+.meter-tile::before { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 14%, transparent), transparent 55%); pointer-events: none; }
+.meter-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; position: relative; }
+.meter-head b { font-size: 17px; }
+.tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); white-space: nowrap; }
+.meter-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 6px; position: relative; }
+.meter-nums div { background: var(--grid); border-radius: 12px; padding: 8px 10px; }
+.meter-nums small { color: var(--muted); display: block; font-size: 11px; }
+.meter-nums b { font-size: 15px; }
+.warn { position: relative; margin: 2px 0 8px; padding: 7px 10px; border-radius: 10px; font-size: 12px; line-height: 1.5; background: color-mix(in srgb, #f59e0b 14%, transparent); color: var(--text); }
+.warn b { color: var(--warn); }
+.empty { position: relative; padding: 28px 10px; text-align: center; color: var(--muted); line-height: 1.6; }
+.empty b { color: var(--bad); display: block; font-size: 16px; }
+table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-variant-numeric: tabular-nums; }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; text-align: right; padding: 0 12px; white-space: nowrap; }
+td { background: var(--grid); padding: 11px 12px; text-align: right; white-space: nowrap; }
+td:first-child { border-radius: 12px 0 0 12px; text-align: left; }
+td:last-child { border-radius: 0 12px 12px 0; }
+th:first-child { text-align: left; }
+td.wrap-text { white-space: normal; text-align: left; color: var(--muted); }
+.table-wrap { overflow-x: auto; }
+tr.row-bad td { background: color-mix(in srgb, var(--bad) 11%, transparent); }
+tr.row-warn td { background: color-mix(in srgb, var(--warn) 13%, transparent); }
+tr.row-bad td:first-child { box-shadow: inset 4px 0 var(--bad); }
+tr.row-warn td:first-child { box-shadow: inset 4px 0 var(--warn); }
+tr.row-bad td.wrap-text, tr.row-warn td.wrap-text { color: var(--text); }
+.tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; }
+.tag.bad { background: var(--bad); }
+.tag.warn { background: var(--warn); }
+[data-theme="dark"] .tag { color: #07070f; }
+.num-bad { color: var(--bad); font-weight: 700; }
+.num-warn { color: var(--warn); font-weight: 700; }
+.key { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; }
+.key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+/* Test result tiles, shown only in the pytest report. */
+:root { --pass: #10b981; --fail: #ef4444; --error: #f97316; --skip: #94a3b8; --xfail: #8b5cf6; --code: #f6f7fb; }
+[data-theme="dark"] { --code: #0e0e1c; }
+.s3 { grid-column: span 3; }
+.section { grid-column: span 12; display: flex; align-items: baseline; gap: 12px; margin: 14px 4px 0; }
+.section h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.section span { color: var(--muted); font-size: 13px; }
+.stat-tile .n.good { color: var(--pass); }
+.rate { display: flex; align-items: center; gap: 22px; }
+.rate .ring { width: 140px; height: 140px; flex: none; }
+.legend-list { display: grid; gap: 8px; font-size: 13px; flex: 1; }
+.legend-list span { display: flex; align-items: center; gap: 8px; }
+.legend-list i { width: 10px; height: 10px; border-radius: 3px; }
+.legend-list b { margin-left: auto; }
+.cmd { margin-top: 14px; font-size: 12px; color: var(--muted); }
+.cmd code { background: var(--grid); padding: 2px 8px; border-radius: 8px; color: var(--text); }
+.rows { display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+.row .label { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.track { grid-column: 1 / -1; height: 9px; border-radius: 9px; background: var(--grid); overflow: hidden; display: flex; }
+.track i { display: block; height: 100%; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.fchip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 99px; border: 1px solid var(--border); background: var(--grid); cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; }
+.fchip input { accent-color: var(--accent); margin: 0; }
+.fchip i { width: 8px; height: 8px; border-radius: 50%; }
+.search { flex: 1; min-width: 180px; padding: 8px 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--tile-solid); color: var(--text); font: inherit; }
+select.search { flex: 0 1 200px; }
+.group { margin-top: 14px; }
+.group-title { font-weight: 800; font-size: 13px; margin: 0 0 6px; }
+.group-title small { color: var(--muted); font-weight: 600; margin-left: 6px; }
+.test { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 10px 12px; border-radius: 12px; background: var(--grid); margin-bottom: 6px; }
+.pill { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 99px; text-align: center; color: #fff; text-transform: uppercase; letter-spacing: .04em; }
+.test .name { font-weight: 600; word-break: break-word; }
+.test .doc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.test .marks { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.test .marks span { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
+.test .dur { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.test details { grid-column: 2 / -1; }
+.test summary { cursor: pointer; color: var(--fail); font-weight: 700; font-size: 12px; }
+.test pre { background: var(--code); border: 1px solid var(--border); border-radius: 12px; padding: 12px; overflow: auto; font-size: 12px; line-height: 1.45; max-height: 420px; white-space: pre; margin: 8px 0 0; }
+footer { margin-top: 22px; color: var(--muted); font-size: 12px; text-align: center; }
+@media (max-width: 1080px) { .s8, .s7, .s6, .s5 { grid-column: span 12; } .s4, .s3 { grid-column: span 6; } }
+@media (max-width: 680px) { .s4, .s3 { grid-column: span 12; } .test { grid-template-columns: 1fr; } .test details { grid-column: 1; } .rate { flex-direction: column; } .hero h1 { font-size: 30px; } .wrap { padding: 14px 12px 40px; } .t { border-radius: 18px; padding: 16px; } }
+@media print { .actions { display: none; } body::before { display: none; } .t { break-inside: avoid; backdrop-filter: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><i></i>Ammeter Test Report</div>
+    <div class="actions">
+      <button class="icon-btn" id="settings-btn" title="Choose what to show"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      <button class="icon-btn theme-btn" data-theme-toggle title="Switch light / dark"></button>
+      <div class="panel" id="panel"><h4>Show tiles</h4><div id="opts"></div></div>
+    </div>
+  </div>
+
+  <div class="bento">
+    <div class="t hero s8" data-chart="hero" id="hero"></div>
+    <div class="t s4" data-chart="podium" id="podium-tile"><h3>Reliability podium</h3><div class="hint">Lowest coefficient of variation wins.</div><div class="podium" id="podium"></div></div>
+
+    <div class="t s4 stat-tile kpi" data-chart="kpis"><div class="hint">Samples</div><div class="n" id="k-samples"></div><div class="hint" id="k-samples-s"></div></div>
+    <div class="t s4 stat-tile kpi" data-chart="kpis"><div class="hint">Failed</div><div class="n" id="k-failed"></div><div class="hint" id="k-failed-s"></div></div>
+    <div class="t s4 stat-tile kpi" data-chart="kpis"><div class="hint">Timing precision</div><div class="n" id="k-timing"></div><div class="hint">largest gap between planned and actual sample start</div></div>
+    <div class="t s3 stat-tile kpi no-data" data-chart="kpis" id="k-tests-tile"><div class="hint">pytest</div><div class="n" id="k-tests"></div><div class="hint" id="k-tests-s"></div></div>
+
+    <div id="meter-tiles" style="display:contents"></div>
+
+    <div class="t s7" data-chart="overlay" id="overlay-tile"><h3>All ammeters, one scale</h3><div class="hint">Every sample divided by its run mean, so different scales can be compared.</div><div id="overlay"></div></div>
+    <div class="t s5" data-chart="spread" id="spread-tile"><h3>Spread</h3><div class="hint">Box: middle 50% of the samples. Dashed line: the mean.</div><div id="box"></div></div>
+
+    <div class="t s6" data-chart="accuracy" id="accuracy-tile"><h3>Accuracy vs theory</h3><div class="hint">|measured mean − expected mean| / expected mean</div><div id="acc"></div></div>
+    <div class="t s6" data-chart="history"><h3>History</h3><div class="hint">Coefficient of variation of earlier saved runs, then this run.</div><div id="hist"></div></div>
+
+    <div class="t s12" data-chart="table"><h3>Statistics</h3><div class="hint">Values in amperes.</div><div class="table-wrap"><table id="table"></table></div></div>
+    <div class="t s12" data-chart="failures" id="failures-tile"><h3>Failed and out-of-range samples</h3><div class="hint">Every sample that did not return a value, and every value the ammeter cannot really measure.</div><div class="hint"><span class="key"><i style="background:var(--bad)"></i>failed: no value</span><span class="key"><i style="background:var(--warn)"></i>out of range: a value the ammeter cannot measure</span></div><div class="table-wrap"><table id="failures"></table></div></div>
+    <div class="section no-data" id="tests-section"><h2>Test results</h2><span id="tests-section-s"></span></div>
+    <div class="t s4 no-data" data-chart="test-rate" id="test-rate-tile"><h3>Pass rate</h3><div class="hint" id="test-verdict"></div><div class="rate"><div id="test-ring"></div><div class="legend-list" id="test-legend"></div></div><div class="cmd" id="test-cmd"></div></div>
+    <div class="t s4 no-data" data-chart="test-files" id="test-files-tile"><h3>By file</h3><div class="hint">Green: passed · red: failed or error · grey: skipped</div><div class="rows" id="test-files"></div></div>
+    <div class="t s4 no-data" data-chart="test-markers" id="test-markers-tile"><h3>By marker</h3><div class="hint">Select tests with <b>-m marker</b>.</div><div class="rows" id="test-markers"></div></div>
+    <div class="t s12 no-data" data-chart="test-slowest" id="test-slowest-tile"><h3>Slowest tests</h3><div class="hint">Setup, call and teardown together.</div><div class="rows" id="test-slowest"></div></div>
+    <div class="t s12 no-data" data-chart="test-failures" id="test-failures-tile"><h3>Failed tests</h3><div class="hint">Every failed test with its message.</div><div id="test-failures"></div></div>
+    <div class="t s12 no-data" data-chart="test-list" id="test-list-tile"><h3>All tests</h3><div class="hint">Filter by result, marker or name.</div><div class="filters" id="test-filters"></div><div id="test-list"></div></div>
+  </div>
+  <footer id="footer"></footer>
+</div>
+<script>
+/*CHARTS_JS*/
+const DATA = /*DATA*/;
+const fmt = Charts.fmt;
+const valid = DATA.ammeters.filter((a) => a.stats.count > 0);
+const ranked = Report.ranking(DATA);
+const best = ranked[0];
+const worst = ranked.length > 1 ? ranked[ranked.length - 1] : null;
+
+/** Make text safe to put inside HTML, error messages can contain any character. */
+const escape = (text) => String(text || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/** Samples whose value lies outside the range the ammeter can physically return, a sign of a wrong reading. */
+const outOfRange = (a) => (a.range ? a.samples.filter((s) => s.v !== null && (s.v < a.range[0] || s.v > a.range[1])) : []);
+/** Readable list of the simulated faults of an ammeter, like 'no reply 5% · spike 3%'. */
+const faultText = (f) => ['no_reply', 'invalid_reply', 'delay', 'spike'].filter((k) => f[k] > 0).map((k) => `${k.replace('_', ' ')} ${Math.round(f[k] * 1000) / 10}%`).join(' · ');
+const simulated = DATA.ammeters.some((a) => a.faults);
+
+/** Hide a tile that has nothing to show, independent of the checkboxes. */
+const noData = (id) => document.getElementById(id).classList.add('no-data');
+
+document.querySelectorAll('[data-theme-toggle]').forEach((b) => { b.innerHTML = Report.themeIcon; });
+if (DATA.tests) document.title = 'Ammeter Test Report · pytest';
+
+const TD = DATA.tests || null;
+const tiles = [['hero', 'Verdict'], ['podium', 'Podium'], ['kpis', 'Key numbers'], ['meters', 'Ammeter tiles'], ['overlay', 'One scale chart'], ['spread', 'Spread'], ['accuracy', 'Accuracy'], ['history', 'History'], ['table', 'Statistics table'], ['failures', 'Failed and out-of-range samples']]
+  .concat(TD ? [['test-rate', 'Test pass rate'], ['test-files', 'Tests by file'], ['test-markers', 'Tests by marker'], ['test-slowest', 'Slowest tests'], ['test-failures', 'Failed tests'], ['test-list', 'All tests']] : []);
+document.getElementById('opts').innerHTML = tiles.map(([id, label]) => `<label class="opt">${label}<input type="checkbox" data-toggle="${id}" checked></label>`).join('');
+const panel = document.getElementById('panel');
+document.getElementById('settings-btn').addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('open'); });
+document.addEventListener('click', (e) => { if (!panel.contains(e.target)) panel.classList.remove('open'); });
+
+// Verdict.
+const testBad = TD ? TD.totals.failed + TD.totals.error : 0;
+const testChip = TD ? `<span>pytest ${TD.totals.passed}/${TD.totals.total} passed${testBad ? ` · ${testBad} failed` : ''}</span>` : '';
+const samplingChip = DATA.sampling ? `<span>${DATA.sampling.measurements_count} samples · ${DATA.sampling.frequency_hz} Hz</span>` : '';
+const simulationChip = simulated ? '<span>⚠ error simulation on</span>' : '';
+const chips = `<div class="chips"><span>${DATA.generated_at.replace('T', ' ')}</span>${simulationChip}${samplingChip}${testChip}<span>Python ${DATA.environment.python_version}</span></div>`;
+const hero = document.getElementById('hero');
+if (!DATA.ammeters.length) {
+  hero.classList.add('failed');
+  hero.innerHTML = `<div class="k">Verdict</div><h1>Measurement could not run</h1><p>${escape(DATA.measurement_error || 'No ammeter results.')}</p>${chips}`;
+} else if (!best) {
+  hero.classList.add('failed');
+  hero.innerHTML = `<div class="k">Verdict</div><h1>No successful measurements</h1><p>Every sample of every ammeter failed. Check that the emulators are running and that the ports and commands in config.yaml are correct. The failed samples are listed at the bottom of this report.</p>${chips}`;
+} else {
+  const skew = worst ? Report.skew(worst) : null;
+  const tail = worst ? ` ${worst.label} varies the most${skew && skew > 1.5 ? `, with rare very large readings pulling its mean to ${fmt(skew, 1)}× its median` : ` at ${fmt(worst.stats.cv_percent, 1)}%`}.` : '';
+  hero.innerHTML = `<div class="k">Verdict</div><h1>${best.label} is the most ${ranked.length > 1 ? 'reliable' : 'consistent'} ammeter</h1><p>${best.method} readings vary by ${fmt(best.stats.cv_percent, 1)}% around their mean${ranked.length > 1 ? `, the tightest of the ${ranked.length}` : ''}.${tail}</p>${chips}`;
+}
+
+// Podium: second place on the left, winner in the middle, third on the right.
+if (!ranked.length) {
+  noData('podium-tile');
+  // Without a podium the verdict takes the whole row.
+  hero.classList.replace('s8', 's12');
+} else {
+  const order = [ranked[1], ranked[0], ranked[2]].filter(Boolean);
+  const heights = { 0: 145, 1: 105, 2: 70 };
+  document.getElementById('podium').innerHTML = order.map((a) => {
+    const place = ranked.indexOf(a);
+    return `<div class="step"><div class="nm" style="color:${a.color}">${a.label}</div><div class="cv">${fmt(a.stats.cv_percent, 1)}%</div><div class="bar" style="height:${heights[place]}px;background:linear-gradient(180deg, ${a.color}, color-mix(in srgb, ${a.color} 60%, #000))">${place + 1}</div></div>`;
+  }).join('');
+}
+
+// Key numbers.
+const total = DATA.ammeters.reduce((n, a) => n + a.samples.length, 0);
+const failed = DATA.ammeters.reduce((n, a) => n + a.stats.failed_count, 0);
+document.getElementById('k-samples').textContent = total;
+document.getElementById('k-samples-s').textContent = DATA.sampling ? `${DATA.sampling.measurements_count} per ammeter, every ${DATA.sampling.interval_seconds} s` : 'no measurement';
+document.getElementById('k-failed').textContent = failed;
+document.getElementById('k-failed').classList.toggle('bad', failed > 0);
+const strangeTotal = DATA.ammeters.reduce((n, a) => n + outOfRange(a).length, 0);
+const failedHint = failed ? 'recorded and skipped, the run went on' : 'every sample returned a value';
+document.getElementById('k-failed-s').innerHTML = strangeTotal ? `${failedHint} · <span class="num-warn">${strangeTotal} out of range</span>` : failedHint;
+const offsets = DATA.sampling ? DATA.ammeters.flatMap((a) => a.samples.map((s) => Math.abs(s.t - s.i * DATA.sampling.interval_seconds))) : [];
+document.getElementById('k-timing').textContent = offsets.length ? `${(Math.max(...offsets) * 1000).toFixed(1)} ms` : '–';
+
+if (!DATA.ammeters.length) {
+  ['podium-tile', 'overlay-tile', 'spread-tile', 'accuracy-tile', 'failures-tile'].forEach((id) => document.getElementById(id).classList.add('no-data'));
+  document.querySelectorAll('[data-chart="history"], [data-chart="table"]').forEach((tile) => tile.classList.add('no-data'));
+}
+
+// One tile per ammeter, sized so the tiles always fill a row.
+const span = DATA.ammeters.length === 1 ? 's12' : DATA.ammeters.length === 2 ? 's6' : 's4';
+document.getElementById('meter-tiles').innerHTML = DATA.ammeters.map((a) => {
+  const head = `<div class="meter-head"><b>${a.label}</b><span class="tag">${a.formula}</span></div>`;
+  if (a.stats.count === 0) {
+    const firstError = (a.samples.find((s) => s.err) || {}).err || '';
+    return `<div class="t ${span} meter-tile" data-chart="meters" style="--c:${a.color}">${head}${a.faults ? `<div class="warn">Simulated faults: <b>${faultText(a.faults)}</b></div>` : ''}<div class="empty"><b>${a.samples.length === 1 ? 'The only sample failed' : `All ${a.samples.length} samples failed`}</b>${escape(firstError)}</div></div>`;
+  }
+  const strange = outOfRange(a).length;
+  const warnings = (a.faults ? `<div>Simulated faults: <b>${faultText(a.faults)}</b></div>` : '') +
+    (strange ? `<div><b>${strange} sample${strange === 1 ? '' : 's'} out of range</b> (possible ${fmt(a.range[0])} - ${fmt(a.range[1])} A)</div>` : '');
+  return `<div class="t ${span} meter-tile" data-chart="meters" style="--c:${a.color}">${head}
+    ${warnings ? `<div class="warn">${warnings}</div>` : ''}
+    <div class="meter-nums"><div><small>mean</small><b>${fmt(a.stats.mean)}</b></div><div><small>median</small><b>${fmt(a.stats.median)}</b></div><div><small>cv</small><b>${fmt(a.stats.cv_percent, 1)}%</b></div></div>
+    <div id="line-${a.name}"></div><div id="histo-${a.name}"></div></div>`;
+}).join('');
+valid.forEach((a) => {
+  Charts.line(document.getElementById(`line-${a.name}`), { area: true, height: 150, unit: '', xUnit: 's', series: [{ name: a.label, color: a.color, points: Report.points(a) }] });
+  Charts.histogram(document.getElementById(`histo-${a.name}`), { values: a.samples.map((s) => s.v), color: a.color, unit: ' A', bins: 12, height: 120, refLines: [{ x: a.stats.median, label: 'median', color: 'var(--muted)' }] });
+});
+
+// Comparison charts, only for ammeters with values.
+if (!valid.length) {
+  noData('overlay-tile');
+  noData('spread-tile');
+} else {
+  Charts.line(document.getElementById('overlay'), { height: 270, unit: '×', xUnit: ' s', refLines: [{ y: 1, label: 'mean', color: 'var(--muted)' }],
+    series: valid.map((a) => ({ name: a.label, color: a.color, points: a.samples.map((s) => ({ x: s.t, y: s.v === null ? null : s.v / a.stats.mean, label: `#${s.i} · ${s.v === null ? 'failed' : fmt(s.v) + ' A'}` })) })) });
+  Charts.box(document.getElementById('box'), { height: 290, refLine: 1, unit: '×', groups: valid.map((a) => ({ label: a.label, color: a.color, values: Report.normalized(a) })) });
+}
+
+const accuracy = DATA.ammeters.filter((a) => Report.accuracyError(a) !== null);
+if (!accuracy.length) {
+  noData('accuracy-tile');
+} else {
+  Charts.bars(document.getElementById('acc'), { horizontal: true, unit: '%', digits: 1,
+    items: accuracy.map((a) => ({ label: a.label, value: Math.abs(Report.accuracyError(a)), color: a.color, note: `measured ${fmt(a.stats.mean)} A · theory ${fmt(a.expected_mean)} A` })) });
+}
+
+// History: earlier runs, then this run as the last point.
+const historySeries = valid.map((a) => {
+  const runs = (DATA.history[a.name] || []).concat([{ run_id: a.run_id, started_at: a.started_at, mean: a.stats.mean, cv_percent: a.stats.cv_percent, current: true }]);
+  return { name: a.label, color: a.color, points: runs.map((h, i) => ({ x: i, y: h.cv_percent, label: `${h.current ? '<b>this run</b> · ' : ''}${h.started_at.replace('T', ' ')}<br>${h.run_id}<br>mean ${fmt(h.mean)} A · cv ${fmt(h.cv_percent, 1)}%` })) };
+});
+if (historySeries.every((s) => s.points.length < 2)) {
+  document.getElementById('hist').innerHTML = '<div class="empty">No earlier runs saved yet.<br>Run the tests again to compare this run with the previous ones.</div>';
+} else {
+  Charts.line(document.getElementById('hist'), { height: 220, unit: '%', zeroBased: true, xFormat: (i) => `run ${Math.round(i) + 1}`, series: historySeries.filter((s) => s.points.length > 1) });
+}
+
+// Statistics table, best ammeter first and failed ammeters last.
+const tableOrder = ranked.concat(DATA.ammeters.filter((a) => !ranked.includes(a)));
+document.getElementById('table').innerHTML = `<thead><tr><th>Ammeter</th><th>Run id</th><th>Port</th><th>n</th><th>Failed</th><th>Out of range</th><th>Mean</th><th>Median</th><th>Std</th><th>Min</th><th>Max</th><th>CV</th><th>Theory</th></tr></thead><tbody>` +
+  tableOrder.map((a) => `<tr><td><b style="color:${a.color}">${a.label}</b></td><td>${a.run_id}</td><td>${a.port ?? '–'}</td><td>${a.stats.count}</td><td class="${a.stats.failed_count ? 'num-bad' : ''}">${a.stats.failed_count}</td><td class="${outOfRange(a).length ? 'num-warn' : ''}">${outOfRange(a).length || 0}</td><td>${fmt(a.stats.mean)}</td><td>${fmt(a.stats.median)}</td><td>${fmt(a.stats.std)}</td><td>${fmt(a.stats.min_value)}</td><td>${fmt(a.stats.max_value)}</td><td>${a.stats.cv_percent === null ? '–' : fmt(a.stats.cv_percent, 1) + '%'}</td><td>${fmt(a.expected_mean)}</td></tr>`).join('') + '</tbody>';
+
+// Failed samples, the tile disappears when there are none.
+const failures = DATA.ammeters.flatMap((a) => a.samples.filter((s) => s.v === null).map((s) => ({ a, s, kind: 'bad', err: s.err })))
+  .concat(DATA.ammeters.flatMap((a) => outOfRange(a).map((s) => ({ a, s, kind: 'warn', err: `${fmt(s.v)} A, possible ${fmt(a.range[0])} - ${fmt(a.range[1])} A` }))))
+  .sort((x, y) => x.a.name.localeCompare(y.a.name) || x.s.i - y.s.i);
+if (!failures.length) {
+  noData('failures-tile');
+} else {
+  document.getElementById('failures').innerHTML = `<thead><tr><th>Ammeter</th><th>Sample</th><th>Time</th><th>Kind</th><th>Error</th></tr></thead><tbody>` +
+    failures.map(({ a, s, kind, err }) => `<tr class="row-${kind}"><td><b style="color:${a.color}">${a.label}</b></td><td>#${s.i}</td><td>${s.t.toFixed(3)} s</td><td><span class="tag ${kind}">${kind === 'bad' ? 'failed' : 'out of range'}</span></td><td class="wrap-text">${escape(err)}</td></tr>`).join('') + '</tbody>';
+}
+
+if (TD) renderTests(TD);
+
+/** Draw every test result tile of the pytest report. */
+function renderTests(td) {
+  const COLORS = { passed: '#10b981', failed: '#ef4444', error: '#f97316', skipped: '#94a3b8', xfailed: '#8b5cf6', xpassed: '#8b5cf6', 'not run': '#94a3b8' };
+  const BAD = ['failed', 'error'];
+  const T = td.totals;
+  const bad = T.failed + T.error;
+  const seconds = (v) => v < 1 ? `${Math.round(v * 1000)} ms` : `${v.toFixed(2)} s`;
+  ['tests-section', 'k-tests-tile', 'test-rate-tile', 'test-files-tile', 'test-markers-tile', 'test-slowest-tile', 'test-list-tile'].forEach((id) => document.getElementById(id).classList.remove('no-data'));
+  // Four key number tiles in one row instead of three.
+  document.querySelectorAll('.kpi').forEach((tile) => tile.classList.replace('s4', 's3'));
+
+  document.getElementById('k-tests').textContent = `${T.passed}/${T.total}`;
+  document.getElementById('k-tests').classList.add(bad ? 'bad' : 'good');
+  document.getElementById('k-tests-s').textContent = bad ? `${bad} failed · ${seconds(td.duration_seconds)}` : `all passed · ${seconds(td.duration_seconds)}`;
+  document.getElementById('tests-section-s').textContent = `${T.total} tests · pytest ${td.pytest_version} · ${seconds(td.duration_seconds)}`;
+
+  document.getElementById('test-verdict').textContent = T.total === 0 ? 'No tests were run.' : bad ? `${bad} of ${T.total} tests failed.` : `All ${T.passed} tests passed.`;
+  Charts.ring(document.getElementById('test-ring'), T.total ? T.passed / T.total : 0, bad ? COLORS.failed : COLORS.passed, T.total ? `${Math.round(T.passed / T.total * 100)}%` : '–');
+  document.getElementById('test-legend').innerHTML = ['passed', 'failed', 'error', 'skipped', 'xfailed', 'xpassed'].filter((o) => T[o] || o === 'passed' || o === 'failed')
+    .map((o) => `<span><i style="background:${COLORS[o]}"></i>${o}<b>${T[o]}</b></span>`).join('');
+  document.getElementById('test-cmd').innerHTML = `<code>${escape(td.command)}</code>`;
+
+  /** One row with a stacked bar of passed, failed and other tests. */
+  const stackRow = (label, tests) => {
+    const passed = tests.filter((t) => t.outcome === 'passed').length;
+    const failed = tests.filter((t) => BAD.includes(t.outcome)).length;
+    const pct = (n) => n / tests.length * 100;
+    return `<div class="row" title="${escape(label)}"><span class="label">${escape(label)}</span><span class="val">${passed}/${tests.length}${failed ? ` · <b style="color:${COLORS.failed}">${failed} failed</b>` : ''}</span>
+      <div class="track"><i style="width:${pct(passed)}%;background:${COLORS.passed}"></i><i style="width:${pct(failed)}%;background:${COLORS.failed}"></i><i style="width:${pct(tests.length - passed - failed)}%;background:${COLORS.skipped}"></i></div></div>`;
+  };
+  const group = (key) => td.tests.reduce((map, t) => { [].concat(key(t)).forEach((k) => { (map[k] = map[k] || []).push(t); }); return map; }, {});
+  const byFile = group((t) => t.file);
+  document.getElementById('test-files').innerHTML = Object.entries(byFile).map(([f, tests]) => stackRow(f.replace(/^tests\//, ''), tests)).join('') || '<div class="empty">No tests</div>';
+  const byMarker = group((t) => t.markers);
+  const markerNames = Object.keys(byMarker).sort((a, b) => byMarker[b].length - byMarker[a].length);
+  document.getElementById('test-markers').innerHTML = markerNames.map((m) => stackRow(m, byMarker[m])).join('') || '<div class="empty">No markers used</div>';
+
+  const slowest = [...td.tests].sort((a, b) => b.duration - a.duration).slice(0, 10);
+  const longest = slowest.length ? slowest[0].duration || 1 : 1;
+  document.getElementById('test-slowest').innerHTML = slowest.map((t) => `<div class="row" title="${escape(t.nodeid)}"><span class="label">${escape((t.cls ? t.cls + ' › ' : '') + t.name)}</span><span class="val">${seconds(t.duration)}</span>
+    <div class="track"><i style="width:${t.duration / longest * 100}%;background:${COLORS[t.outcome]}"></i></div></div>`).join('') || '<div class="empty">No tests</div>';
+
+  const failedTests = td.tests.filter((t) => BAD.includes(t.outcome));
+  if (failedTests.length) {
+    document.getElementById('test-failures-tile').classList.remove('no-data');
+    document.getElementById('test-failures').innerHTML = failedTests.map((t) => `<div class="test"><span class="pill" style="background:${COLORS[t.outcome]}">${t.outcome}</span><div><div class="name">${escape(t.nodeid)}</div><div class="doc">${escape(t.doc)}</div><pre>${escape(t.message)}</pre></div><span class="dur">${seconds(t.duration)}</span></div>`).join('');
+  }
+
+  const outcomes = ['passed', 'failed', 'error', 'skipped', 'xfailed', 'xpassed'].filter((o) => T[o]);
+  document.getElementById('test-filters').innerHTML = outcomes.map((o) => `<label class="fchip"><input type="checkbox" data-outcome="${o}" checked><i style="background:${COLORS[o]}"></i>${o} ${T[o]}</label>`).join('') +
+    `<select class="search" id="marker-filter"><option value="">All markers</option>${markerNames.map((m) => `<option>${escape(m)}</option>`).join('')}</select>` +
+    '<input class="search" id="test-search" placeholder="Search tests…" type="search">';
+
+  /** Draw the full list, grouped by file and class, using the current filters. */
+  const drawList = () => {
+    const shown = new Set([...document.querySelectorAll('[data-outcome]')].filter((b) => b.checked).map((b) => b.dataset.outcome));
+    const marker = document.getElementById('marker-filter').value;
+    const query = document.getElementById('test-search').value.trim().toLowerCase();
+    const visible = td.tests.filter((t) => shown.has(t.outcome) && (!marker || t.markers.includes(marker)) && (!query || (t.nodeid + ' ' + t.doc).toLowerCase().includes(query)));
+    const groups = group.call(null, (t) => t.file + (t.cls ? ' › ' + t.cls : ''));
+    document.getElementById('test-list').innerHTML = Object.entries(groups).map(([key, tests]) => {
+      const rows = tests.filter((t) => visible.includes(t));
+      if (!rows.length) return '';
+      return `<div class="group"><div class="group-title">${escape(key)}<small>${rows.length}</small></div>` +
+        rows.map((t) => `<div class="test"><span class="pill" style="background:${COLORS[t.outcome]}">${t.outcome}</span><div><div class="name">${escape(t.name)}</div>${t.doc ? `<div class="doc">${escape(t.doc)}</div>` : ''}${t.markers.length ? `<div class="marks">${t.markers.map((m) => `<span>${escape(m)}</span>`).join('')}</div>` : ''}</div><span class="dur">${seconds(t.duration)}</span>${t.message && BAD.includes(t.outcome) ? `<details><summary>Show message</summary><pre>${escape(t.message)}</pre></details>` : ''}</div>`).join('') + '</div>';
+    }).join('') || '<div class="empty">No test matches the filters.</div>';
+  };
+  document.getElementById('test-filters').addEventListener('input', drawList);
+  drawList();
+}
+
+document.getElementById('footer').textContent = `Ammeter Test Framework · ${DATA.environment.platform} · ${DATA.ammeters.length ? 'runs ' + DATA.ammeters.map((a) => a.run_id).join(', ') : 'no measurement'}`;
+
+Report.initTheme();
+Report.initToggles();
+</script>
+</body>
+</html>
