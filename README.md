@@ -46,6 +46,7 @@
   <li><a href="#configuration">⚙️ Configuration</a></li>
   <li><a href="#using-the-framework-from-code">Using the Framework from Your Own Code</a></li>
   <li><a href="#results-and-logs">📁 Results and Logs</a></li>
+  <li><a href="#sample-results">📄 Sample Results</a></li>
   <li><a href="#project-structure">📁 Project Structure and Architecture</a></li>
   <li><a href="#design-decisions">💡 Design Decisions</a></li>
   <li><a href="#fixes-to-the-existing-code">🐞 Fixes to the Existing Code</a></li>
@@ -738,6 +739,26 @@ open_report(generate_report([result], 'results/reports'))</code></pre>
   8 random hex characters, so runs started in the same second never clash.
 </p>
 
+<p>The <code>results</code> folder is ignored by git. Example results are kept in <a href="#sample-results"><code>sample_results/</code></a>.</p>
+
+<h2 id="sample-results">📄 Sample Results</h2>
+<p>
+  The <a href="sample_results/"><code>sample_results/</code></a> folder holds real results of one session, so they can be
+  read without running anything. Its <a href="sample_results/README.md">README</a> explains every file and summarizes the numbers.
+</p>
+<table>
+  <thead> <tr> <th>File</th> <th>What it shows</th> </tr> </thead>
+  <tbody>
+    <tr> <td><code>reports/measurement_report.html</code></td> <td>HTML report of a normal run of <code>main.py</code></td> </tr>
+    <tr> <td><code>reports/measurement_report_simulated_errors.html</code></td> <td>HTML report of a run with <code>--simulate-errors</code></td> </tr>
+    <tr> <td><code>reports/pytest_report.html</code></td> <td>The test results together with the ammeter charts</td> </tr>
+    <tr> <td><code>runs/normal/</code>, <code>runs/simulated_errors/</code></td> <td>The saved JSON run of every ammeter: samples, statistics and metadata</td> </tr>
+    <tr> <td><code>main_output.txt</code>, <code>main_simulate_errors_output.txt</code></td> <td>Console output of both runs of <code>main.py</code></td> </tr>
+    <tr> <td><code>pytest_output.txt</code></td> <td>Output of <code>pytest -v</code>: 118 passed</td> </tr>
+  </tbody>
+</table>
+<p>The HTML reports are self-contained: download one and open it in any browser.</p>
+
 <h2 id="project-structure">📁 Project Structure and Architecture</h2>
 
 ```mermaid
@@ -786,6 +807,7 @@ flowchart LR
 │       └── Utils.py
 ├── tests/                         118 pytest tests
 ├── examples/run_tests.py          using the framework from your own code
+├── sample_results/                example reports, JSON runs and console output
 ├── docs/images/                   screenshots for this README
 └── Exam/                          the task description</code></pre>
 

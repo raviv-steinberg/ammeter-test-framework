@@ -1,0 +1,641 @@
+{
+  "run_id": "20261122_183624_8d36b3e8",
+  "ammeter_type": "circutor",
+  "started_at": "2026-11-22T18:36:24",
+  "duration_seconds": 50.503943687999964,
+  "measurements_count": 100,
+  "interval_seconds": 0.5,
+  "metadata": {
+    "host": "localhost",
+    "port": 5002,
+    "command": "MEASURE_CIRCUTOR -get_measurement",
+    "sampling_config": {
+      "measurements_count": 100,
+      "total_duration_seconds": null,
+      "sampling_frequency_hz": 2
+    },
+    "timeout_seconds": 2,
+    "error_simulation": {
+      "no_reply": 0.0,
+      "invalid_reply": 0.0,
+      "delay": 0.03,
+      "spike": 0.0,
+      "delay_seconds": 3,
+      "spike_factor": 50
+    },
+    "python_version": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39"
+  },
+  "samples": [
+    {
+      "index": 0,
+      "timestamp": 2.884999986463299e-06,
+      "current": 0.03382894814963789,
+      "error": null
+    },
+    {
+      "index": 1,
+      "timestamp": 0.5001882559999729,
+      "current": 0.05370280500834466,
+      "error": null
+    },
+    {
+      "index": 2,
+      "timestamp": 1.000228896999971,
+      "current": 0.02318766557311424,
+      "error": null
+    },
+    {
+      "index": 3,
+      "timestamp": 1.5002607369999907,
+      "current": 0.047093197149210154,
+      "error": null
+    },
+    {
+      "index": 4,
+      "timestamp": 2.0001868880000018,
+      "current": 0.047219229130531865,
+      "error": null
+    },
+    {
+      "index": 5,
+      "timestamp": 2.5002017729999864,
+      "current": 0.022331875893998588,
+      "error": null
+    },
+    {
+      "index": 6,
+      "timestamp": 3.0001616259999935,
+      "current": 0.02383248730012767,
+      "error": null
+    },
+    {
+      "index": 7,
+      "timestamp": 3.5001911450000023,
+      "current": 0.036994257120935306,
+      "error": null
+    },
+    {
+      "index": 8,
+      "timestamp": 4.000308788000012,
+      "current": null,
+      "error": "Cannot communicate with ammeter on port 5002: timed out."
+    },
+    {
+      "index": 9,
+      "timestamp": 6.003566043999996,
+      "current": 0.031087968564962376,
+      "error": null
+    },
+    {
+      "index": 10,
+      "timestamp": 7.002264437999969,
+      "current": 0.04615697415371755,
+      "error": null
+    },
+    {
+      "index": 11,
+      "timestamp": 7.002829089000016,
+      "current": 0.011389000250579664,
+      "error": null
+    },
+    {
+      "index": 12,
+      "timestamp": 7.003143077999965,
+      "current": 0.030596594883212463,
+      "error": null
+    },
+    {
+      "index": 13,
+      "timestamp": 7.003640200999968,
+      "current": 0.008271675945437226,
+      "error": null
+    },
+    {
+      "index": 14,
+      "timestamp": 7.004013941000011,
+      "current": 0.012661289448549034,
+      "error": null
+    },
+    {
+      "index": 15,
+      "timestamp": 7.500171859999995,
+      "current": 0.006145912991491929,
+      "error": null
+    },
+    {
+      "index": 16,
+      "timestamp": 8.000143473000008,
+      "current": 0.034271492877838435,
+      "error": null
+    },
+    {
+      "index": 17,
+      "timestamp": 8.500169590000013,
+      "current": 0.01125407247865991,
+      "error": null
+    },
+    {
+      "index": 18,
+      "timestamp": 9.000159769000021,
+      "current": 0.035748630861192,
+      "error": null
+    },
+    {
+      "index": 19,
+      "timestamp": 9.500182642999988,
+      "current": null,
+      "error": "Cannot communicate with ammeter on port 5002: timed out."
+    },
+    {
+      "index": 20,
+      "timestamp": 11.503122606000005,
+      "current": 0.014641136377910237,
+      "error": null
+    },
+    {
+      "index": 21,
+      "timestamp": 12.502295055000019,
+      "current": 0.042321942221518076,
+      "error": null
+    },
+    {
+      "index": 22,
+      "timestamp": 12.503066159999975,
+      "current": 0.011822057994026962,
+      "error": null
+    },
+    {
+      "index": 23,
+      "timestamp": 12.503694660999969,
+      "current": 0.006189661812239954,
+      "error": null
+    },
+    {
+      "index": 24,
+      "timestamp": 12.504199800999999,
+      "current": 0.022031377637644366,
+      "error": null
+    },
+    {
+      "index": 25,
+      "timestamp": 12.504625861999983,
+      "current": 0.017188539334890694,
+      "error": null
+    },
+    {
+      "index": 26,
+      "timestamp": 13.000151064999983,
+      "current": 0.050785038428403706,
+      "error": null
+    },
+    {
+      "index": 27,
+      "timestamp": 13.500187571999987,
+      "current": 0.011601824845908614,
+      "error": null
+    },
+    {
+      "index": 28,
+      "timestamp": 14.000168765999973,
+      "current": 0.02763090280713434,
+      "error": null
+    },
+    {
+      "index": 29,
+      "timestamp": 14.500195082999966,
+      "current": 0.055282267516045085,
+      "error": null
+    },
+    {
+      "index": 30,
+      "timestamp": 15.000192408000004,
+      "current": 0.005516615717448737,
+      "error": null
+    },
+    {
+      "index": 31,
+      "timestamp": 15.500174325000017,
+      "current": 0.008907603064731524,
+      "error": null
+    },
+    {
+      "index": 32,
+      "timestamp": 16.000225950999976,
+      "current": 0.01767721271195763,
+      "error": null
+    },
+    {
+      "index": 33,
+      "timestamp": 16.500252124000014,
+      "current": 0.031805163421788664,
+      "error": null
+    },
+    {
+      "index": 34,
+      "timestamp": 17.000151382999974,
+      "current": 0.012878305659446199,
+      "error": null
+    },
+    {
+      "index": 35,
+      "timestamp": 17.500188468999994,
+      "current": 0.0224258253267954,
+      "error": null
+    },
+    {
+      "index": 36,
+      "timestamp": 18.00019446799999,
+      "current": 0.0435470914532858,
+      "error": null
+    },
+    {
+      "index": 37,
+      "timestamp": 18.50027070500002,
+      "current": 0.03514653086505981,
+      "error": null
+    },
+    {
+      "index": 38,
+      "timestamp": 19.001820303000017,
+      "current": 0.005717053490509733,
+      "error": null
+    },
+    {
+      "index": 39,
+      "timestamp": 19.50020599299998,
+      "current": 0.015708087618144167,
+      "error": null
+    },
+    {
+      "index": 40,
+      "timestamp": 20.000194976000017,
+      "current": 0.050011844034495295,
+      "error": null
+    },
+    {
+      "index": 41,
+      "timestamp": 20.50033617400001,
+      "current": 0.04825684064707697,
+      "error": null
+    },
+    {
+      "index": 42,
+      "timestamp": 21.000215294000014,
+      "current": 0.042804113517135034,
+      "error": null
+    },
+    {
+      "index": 43,
+      "timestamp": 21.500213021999997,
+      "current": 0.029696337032408027,
+      "error": null
+    },
+    {
+      "index": 44,
+      "timestamp": 22.00017740199999,
+      "current": 0.015342432701628127,
+      "error": null
+    },
+    {
+      "index": 45,
+      "timestamp": 22.500167677000007,
+      "current": 0.025025337207310195,
+      "error": null
+    },
+    {
+      "index": 46,
+      "timestamp": 23.000183942000007,
+      "current": 0.04180414655497068,
+      "error": null
+    },
+    {
+      "index": 47,
+      "timestamp": 23.500234395999968,
+      "current": 0.043713830958851854,
+      "error": null
+    },
+    {
+      "index": 48,
+      "timestamp": 24.000162288999974,
+      "current": 0.032855522822536024,
+      "error": null
+    },
+    {
+      "index": 49,
+      "timestamp": 24.500241649000003,
+      "current": 0.0073569810056924225,
+      "error": null
+    },
+    {
+      "index": 50,
+      "timestamp": 25.00018010300002,
+      "current": 0.00779328677707936,
+      "error": null
+    },
+    {
+      "index": 51,
+      "timestamp": 25.500160033000014,
+      "current": 0.041141757644351545,
+      "error": null
+    },
+    {
+      "index": 52,
+      "timestamp": 26.00021271199998,
+      "current": 0.009190281003887428,
+      "error": null
+    },
+    {
+      "index": 53,
+      "timestamp": 26.500264282000018,
+      "current": 0.049040681498324724,
+      "error": null
+    },
+    {
+      "index": 54,
+      "timestamp": 27.000188976999965,
+      "current": 0.039458515800634086,
+      "error": null
+    },
+    {
+      "index": 55,
+      "timestamp": 27.500169607000004,
+      "current": 0.020011396645668346,
+      "error": null
+    },
+    {
+      "index": 56,
+      "timestamp": 28.00022954199997,
+      "current": 0.046131338329462424,
+      "error": null
+    },
+    {
+      "index": 57,
+      "timestamp": 28.500254377000005,
+      "current": 0.04180541785359901,
+      "error": null
+    },
+    {
+      "index": 58,
+      "timestamp": 29.000170011999984,
+      "current": 0.049739870437952076,
+      "error": null
+    },
+    {
+      "index": 59,
+      "timestamp": 29.500177285999968,
+      "current": 0.010096853305594965,
+      "error": null
+    },
+    {
+      "index": 60,
+      "timestamp": 30.00017582899997,
+      "current": 0.04440605495316732,
+      "error": null
+    },
+    {
+      "index": 61,
+      "timestamp": 30.50020014200001,
+      "current": 0.03629435227642773,
+      "error": null
+    },
+    {
+      "index": 62,
+      "timestamp": 31.00018935799997,
+      "current": 0.05331452450813207,
+      "error": null
+    },
+    {
+      "index": 63,
+      "timestamp": 31.50019968000001,
+      "current": 0.03552166823295776,
+      "error": null
+    },
+    {
+      "index": 64,
+      "timestamp": 32.000178503,
+      "current": 0.023848223544808513,
+      "error": null
+    },
+    {
+      "index": 65,
+      "timestamp": 32.50024730300001,
+      "current": 0.03168409513817048,
+      "error": null
+    },
+    {
+      "index": 66,
+      "timestamp": 33.000196493000004,
+      "current": 0.03205388582096973,
+      "error": null
+    },
+    {
+      "index": 67,
+      "timestamp": 33.50020461799997,
+      "current": null,
+      "error": "Cannot communicate with ammeter on port 5002: timed out."
+    },
+    {
+      "index": 68,
+      "timestamp": 35.50321250599998,
+      "current": 0.012625817678174283,
+      "error": null
+    },
+    {
+      "index": 69,
+      "timestamp": 36.50220199999998,
+      "current": 0.02118852547465845,
+      "error": null
+    },
+    {
+      "index": 70,
+      "timestamp": 36.50276784100001,
+      "current": 0.03997638097640249,
+      "error": null
+    },
+    {
+      "index": 71,
+      "timestamp": 36.50534011800002,
+      "current": 0.04927953516128091,
+      "error": null
+    },
+    {
+      "index": 72,
+      "timestamp": 36.50586869100002,
+      "current": 0.01349968685235773,
+      "error": null
+    },
+    {
+      "index": 73,
+      "timestamp": 36.506450172,
+      "current": 0.04469883738873204,
+      "error": null
+    },
+    {
+      "index": 74,
+      "timestamp": 37.000504732999985,
+      "current": 0.03251940031406036,
+      "error": null
+    },
+    {
+      "index": 75,
+      "timestamp": 37.500260881,
+      "current": 0.06406266406452095,
+      "error": null
+    },
+    {
+      "index": 76,
+      "timestamp": 38.00027799299997,
+      "current": 0.04954299978213084,
+      "error": null
+    },
+    {
+      "index": 77,
+      "timestamp": 38.50019404299999,
+      "current": 0.020647291092350924,
+      "error": null
+    },
+    {
+      "index": 78,
+      "timestamp": 39.00016563,
+      "current": 0.061320739845776344,
+      "error": null
+    },
+    {
+      "index": 79,
+      "timestamp": 39.50017060799999,
+      "current": 0.015386400408546637,
+      "error": null
+    },
+    {
+      "index": 80,
+      "timestamp": 40.000163964999985,
+      "current": 0.01625774831742397,
+      "error": null
+    },
+    {
+      "index": 81,
+      "timestamp": 40.50017728899999,
+      "current": 0.05526112698258761,
+      "error": null
+    },
+    {
+      "index": 82,
+      "timestamp": 41.00028862499997,
+      "current": 0.019052207231979708,
+      "error": null
+    },
+    {
+      "index": 83,
+      "timestamp": 41.50026261100001,
+      "current": 0.022688497891532686,
+      "error": null
+    },
+    {
+      "index": 84,
+      "timestamp": 42.000173743999966,
+      "current": 0.05054249977966153,
+      "error": null
+    },
+    {
+      "index": 85,
+      "timestamp": 42.50022371899999,
+      "current": 0.007861903757564848,
+      "error": null
+    },
+    {
+      "index": 86,
+      "timestamp": 43.00019079299997,
+      "current": 0.006495849938324058,
+      "error": null
+    },
+    {
+      "index": 87,
+      "timestamp": 43.500794654999964,
+      "current": 0.022465865684025876,
+      "error": null
+    },
+    {
+      "index": 88,
+      "timestamp": 44.00014998100002,
+      "current": 0.012582227168906208,
+      "error": null
+    },
+    {
+      "index": 89,
+      "timestamp": 44.50033886899999,
+      "current": 0.03969224314334388,
+      "error": null
+    },
+    {
+      "index": 90,
+      "timestamp": 45.00022323599998,
+      "current": 0.011334377494889436,
+      "error": null
+    },
+    {
+      "index": 91,
+      "timestamp": 45.50020132099999,
+      "current": 0.04740903026644072,
+      "error": null
+    },
+    {
+      "index": 92,
+      "timestamp": 46.000259043,
+      "current": 0.028315305782402586,
+      "error": null
+    },
+    {
+      "index": 93,
+      "timestamp": 46.50014609899998,
+      "current": 0.020715084198930887,
+      "error": null
+    },
+    {
+      "index": 94,
+      "timestamp": 47.000191215,
+      "current": 0.020624707417205564,
+      "error": null
+    },
+    {
+      "index": 95,
+      "timestamp": 47.500208146999995,
+      "current": null,
+      "error": "Cannot communicate with ammeter on port 5002: timed out."
+    },
+    {
+      "index": 96,
+      "timestamp": 49.503109792000004,
+      "current": 0.01085415055103001,
+      "error": null
+    },
+    {
+      "index": 97,
+      "timestamp": 50.50194161800002,
+      "current": 0.029759887206373695,
+      "error": null
+    },
+    {
+      "index": 98,
+      "timestamp": 50.50270818499999,
+      "current": 0.04919700519963556,
+      "error": null
+    },
+    {
+      "index": 99,
+      "timestamp": 50.50336216499997,
+      "current": 0.027726346361187443,
+      "error": null
+    }
+  ],
+  "statistics": {
+    "count": 96,
+    "failed_count": 4,
+    "mean": 0.029235231768251678,
+    "median": 0.029005821407405305,
+    "std": 0.015705537427523585,
+    "min_value": 0.005516615717448737,
+    "max_value": 0.06406266406452095,
+    "cv_percent": 53.72126874868557
+  }
+}

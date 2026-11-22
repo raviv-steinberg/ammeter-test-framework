@@ -1,0 +1,56 @@
+Log file: /tmp/gen/results/logs/20261122_183214.log
+[2026-11-22 18:32:14,738] [INFO] base_ammeter.py:start_server: CircutorAmmeter is running on port 5002
+[2026-11-22 18:32:14,738] [INFO] base_ammeter.py:start_server: GreenleeAmmeter is running on port 5000
+[2026-11-22 18:32:14,739] [INFO] base_ammeter.py:start_server: EntesAmmeter is running on port 5001
+[2026-11-22 18:32:15,745] [INFO] test_framework.py:run_test: Testing greenlee (run 20261122_183215_1cfe6b75): 100 samples every 0.500 s
+[2026-11-22 18:33:05,248] [INFO] test_framework.py:run_test: Finished greenlee in 49.50 s, 0 failed
+
+--- greenlee ---
+run id:   20261122_183215_1cfe6b75
+started:  2026-11-22T18:32:15  duration: 49.50 s
+samples:  100  failed: 0
+mean:     0.3778 A
+median:   0.1217 A
+std:      1.3788 A
+min:      0.0136 A
+max:      13.3984 A
+cv:       365.0 %
+saved:    /tmp/gen/results/runs/20261122_183215_1cfe6b75.json
+[2026-11-22 18:33:05,249] [INFO] test_framework.py:run_test: Testing entes (run 20261122_183305_87d00097): 100 samples every 0.500 s
+[2026-11-22 18:33:54,751] [INFO] test_framework.py:run_test: Finished entes in 49.50 s, 0 failed
+
+--- entes ---
+run id:   20261122_183305_87d00097
+started:  2026-11-22T18:33:05  duration: 49.50 s
+samples:  100  failed: 0
+mean:     59.9689 A
+median:   52.9365 A
+std:      39.1898 A
+min:      7.6416 A
+max:      179.7748 A
+cv:       65.4 %
+saved:    /tmp/gen/results/runs/20261122_183305_87d00097.json
+[2026-11-22 18:33:54,752] [INFO] test_framework.py:run_test: Testing circutor (run 20261122_183354_f050dca8): 100 samples every 0.500 s
+[2026-11-22 18:34:44,254] [INFO] test_framework.py:run_test: Finished circutor in 49.50 s, 0 failed
+
+--- circutor ---
+run id:   20261122_183354_f050dca8
+started:  2026-11-22T18:33:54  duration: 49.50 s
+samples:  100  failed: 0
+mean:     0.0322 A
+median:   0.0317 A
+std:      0.0150 A
+min:      0.0083 A
+max:      0.0623 A
+cv:       46.5 %
+saved:    /tmp/gen/results/runs/20261122_183354_f050dca8.json
+
+This session:
+run id                    ammeter   samples  failed  mean        median      std         cv %    
+-------------------------------------------------------------------------------------------------
+20261122_183215_1cfe6b75  greenlee  100      0       0.3778      0.1217      1.3788      365.0   
+20261122_183305_87d00097  entes     100      0       59.9689     52.9365     39.1898     65.4    
+20261122_183354_f050dca8  circutor  100      0       0.0322      0.0317      0.0150      46.5    
+[2026-11-22 18:34:44,262] [INFO] html_report.py:generate_report: Report written to /tmp/gen/results/reports/report_20261122_183215.html
+
+Report:   /tmp/gen/results/reports/report_20261122_183215.html

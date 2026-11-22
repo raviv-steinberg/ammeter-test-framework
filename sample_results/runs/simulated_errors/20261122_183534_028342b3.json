@@ -1,0 +1,641 @@
+{
+  "run_id": "20261122_183534_028342b3",
+  "ammeter_type": "entes",
+  "started_at": "2026-11-22T18:35:34",
+  "duration_seconds": 49.50281689100001,
+  "measurements_count": 100,
+  "interval_seconds": 0.5,
+  "metadata": {
+    "host": "localhost",
+    "port": 5001,
+    "command": "MEASURE_ENTES -get_data",
+    "sampling_config": {
+      "measurements_count": 100,
+      "total_duration_seconds": null,
+      "sampling_frequency_hz": 2
+    },
+    "timeout_seconds": 2,
+    "error_simulation": {
+      "no_reply": 0.0,
+      "invalid_reply": 0.05,
+      "delay": 0.0,
+      "spike": 0.05,
+      "delay_seconds": 3,
+      "spike_factor": 50
+    },
+    "python_version": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39"
+  },
+  "samples": [
+    {
+      "index": 0,
+      "timestamp": 2.0870000128070387e-06,
+      "current": 141.68160395732275,
+      "error": null
+    },
+    {
+      "index": 1,
+      "timestamp": 0.500237157000015,
+      "current": 6010.526734446039,
+      "error": null
+    },
+    {
+      "index": 2,
+      "timestamp": 1.000280365000009,
+      "current": 46.31705614493526,
+      "error": null
+    },
+    {
+      "index": 3,
+      "timestamp": 1.5002331130000073,
+      "current": 176.8686013963276,
+      "error": null
+    },
+    {
+      "index": 4,
+      "timestamp": 2.000176664999998,
+      "current": 87.66728279686454,
+      "error": null
+    },
+    {
+      "index": 5,
+      "timestamp": 2.500253528000002,
+      "current": 17.359273188159516,
+      "error": null
+    },
+    {
+      "index": 6,
+      "timestamp": 3.0001702140000077,
+      "current": 61.76595865598465,
+      "error": null
+    },
+    {
+      "index": 7,
+      "timestamp": 3.5001958640000055,
+      "current": 36.78689050390207,
+      "error": null
+    },
+    {
+      "index": 8,
+      "timestamp": 4.000122341999997,
+      "current": 159.63574889926988,
+      "error": null
+    },
+    {
+      "index": 9,
+      "timestamp": 4.500369707000004,
+      "current": null,
+      "error": "Invalid reply from port 5001: 'ERR:SIMULATED'."
+    },
+    {
+      "index": 10,
+      "timestamp": 5.000191706999999,
+      "current": 144.69646804481658,
+      "error": null
+    },
+    {
+      "index": 11,
+      "timestamp": 5.500162528000004,
+      "current": 46.88948977160091,
+      "error": null
+    },
+    {
+      "index": 12,
+      "timestamp": 6.000256888000024,
+      "current": 93.76687245453384,
+      "error": null
+    },
+    {
+      "index": 13,
+      "timestamp": 6.500281035,
+      "current": 114.38128831594979,
+      "error": null
+    },
+    {
+      "index": 14,
+      "timestamp": 7.000175134000017,
+      "current": 76.81814535555681,
+      "error": null
+    },
+    {
+      "index": 15,
+      "timestamp": 7.5001646919999985,
+      "current": 24.932584193061377,
+      "error": null
+    },
+    {
+      "index": 16,
+      "timestamp": 8.000146647000008,
+      "current": 81.18835932147948,
+      "error": null
+    },
+    {
+      "index": 17,
+      "timestamp": 8.500101415000017,
+      "current": 18.849943599260676,
+      "error": null
+    },
+    {
+      "index": 18,
+      "timestamp": 9.000219817000016,
+      "current": 67.24505623098547,
+      "error": null
+    },
+    {
+      "index": 19,
+      "timestamp": 9.500149671000003,
+      "current": 61.57613167979807,
+      "error": null
+    },
+    {
+      "index": 20,
+      "timestamp": 10.000170759000014,
+      "current": 58.148028825617615,
+      "error": null
+    },
+    {
+      "index": 21,
+      "timestamp": 10.500251461000005,
+      "current": 12.426008233556106,
+      "error": null
+    },
+    {
+      "index": 22,
+      "timestamp": 11.000482268000013,
+      "current": 41.79894051864951,
+      "error": null
+    },
+    {
+      "index": 23,
+      "timestamp": 11.500214571000015,
+      "current": 86.17938810613349,
+      "error": null
+    },
+    {
+      "index": 24,
+      "timestamp": 12.000144527000003,
+      "current": 69.686610287561,
+      "error": null
+    },
+    {
+      "index": 25,
+      "timestamp": 12.500184904000008,
+      "current": 39.30319564381106,
+      "error": null
+    },
+    {
+      "index": 26,
+      "timestamp": 13.000200182000015,
+      "current": 71.13657261368358,
+      "error": null
+    },
+    {
+      "index": 27,
+      "timestamp": 13.500190719000017,
+      "current": 54.500188786417866,
+      "error": null
+    },
+    {
+      "index": 28,
+      "timestamp": 14.000171694000016,
+      "current": null,
+      "error": "Invalid reply from port 5001: 'ERR:SIMULATED'."
+    },
+    {
+      "index": 29,
+      "timestamp": 14.500160660000006,
+      "current": 117.16736940872872,
+      "error": null
+    },
+    {
+      "index": 30,
+      "timestamp": 15.000162337000006,
+      "current": 6117.303018756778,
+      "error": null
+    },
+    {
+      "index": 31,
+      "timestamp": 15.50022346,
+      "current": 52.0950520440592,
+      "error": null
+    },
+    {
+      "index": 32,
+      "timestamp": 16.000204803000003,
+      "current": 14.381986379573542,
+      "error": null
+    },
+    {
+      "index": 33,
+      "timestamp": 16.50021113400001,
+      "current": null,
+      "error": "Invalid reply from port 5001: 'ERR:SIMULATED'."
+    },
+    {
+      "index": 34,
+      "timestamp": 17.000184228000023,
+      "current": 28.826862585255924,
+      "error": null
+    },
+    {
+      "index": 35,
+      "timestamp": 17.500209610000013,
+      "current": 95.83448902058795,
+      "error": null
+    },
+    {
+      "index": 36,
+      "timestamp": 18.000153033000004,
+      "current": 13.613480805639247,
+      "error": null
+    },
+    {
+      "index": 37,
+      "timestamp": 18.500235290000006,
+      "current": 87.65328562910078,
+      "error": null
+    },
+    {
+      "index": 38,
+      "timestamp": 19.000195767999998,
+      "current": 44.35033974459425,
+      "error": null
+    },
+    {
+      "index": 39,
+      "timestamp": 19.50018214900001,
+      "current": 106.00455824847155,
+      "error": null
+    },
+    {
+      "index": 40,
+      "timestamp": 20.00015950400001,
+      "current": 27.842103360018278,
+      "error": null
+    },
+    {
+      "index": 41,
+      "timestamp": 20.500177048000012,
+      "current": 87.09787819030092,
+      "error": null
+    },
+    {
+      "index": 42,
+      "timestamp": 21.000205340999997,
+      "current": 61.7091053363416,
+      "error": null
+    },
+    {
+      "index": 43,
+      "timestamp": 21.500267967000013,
+      "current": null,
+      "error": "Invalid reply from port 5001: 'ERR:SIMULATED'."
+    },
+    {
+      "index": 44,
+      "timestamp": 22.000184582000003,
+      "current": 16.960774215341925,
+      "error": null
+    },
+    {
+      "index": 45,
+      "timestamp": 22.500217403000022,
+      "current": 49.46729783066199,
+      "error": null
+    },
+    {
+      "index": 46,
+      "timestamp": 23.00018093,
+      "current": 72.5152855791736,
+      "error": null
+    },
+    {
+      "index": 47,
+      "timestamp": 23.500246130000022,
+      "current": 59.66863213536303,
+      "error": null
+    },
+    {
+      "index": 48,
+      "timestamp": 24.00026047,
+      "current": 123.86471328848843,
+      "error": null
+    },
+    {
+      "index": 49,
+      "timestamp": 24.500172980000002,
+      "current": 62.52733589522649,
+      "error": null
+    },
+    {
+      "index": 50,
+      "timestamp": 25.000169117000013,
+      "current": 92.78450655664125,
+      "error": null
+    },
+    {
+      "index": 51,
+      "timestamp": 25.50016978100001,
+      "current": 60.44966446606357,
+      "error": null
+    },
+    {
+      "index": 52,
+      "timestamp": 26.00017721200001,
+      "current": 113.14047567081369,
+      "error": null
+    },
+    {
+      "index": 53,
+      "timestamp": 26.50018390400001,
+      "current": 2799.701869882039,
+      "error": null
+    },
+    {
+      "index": 54,
+      "timestamp": 27.000232803000017,
+      "current": 54.95619283269662,
+      "error": null
+    },
+    {
+      "index": 55,
+      "timestamp": 27.500181294000015,
+      "current": 16.27888515760552,
+      "error": null
+    },
+    {
+      "index": 56,
+      "timestamp": 28.000191772000022,
+      "current": 126.76741296911487,
+      "error": null
+    },
+    {
+      "index": 57,
+      "timestamp": 28.500181027000025,
+      "current": 120.07691755902265,
+      "error": null
+    },
+    {
+      "index": 58,
+      "timestamp": 29.000241511000013,
+      "current": 114.12052590318437,
+      "error": null
+    },
+    {
+      "index": 59,
+      "timestamp": 29.500189689000024,
+      "current": 113.16069050192328,
+      "error": null
+    },
+    {
+      "index": 60,
+      "timestamp": 30.00023481300002,
+      "current": 73.51639712023541,
+      "error": null
+    },
+    {
+      "index": 61,
+      "timestamp": 30.500119829,
+      "current": 37.90209553521208,
+      "error": null
+    },
+    {
+      "index": 62,
+      "timestamp": 31.000211502000013,
+      "current": 55.75694863893025,
+      "error": null
+    },
+    {
+      "index": 63,
+      "timestamp": 31.500175616000007,
+      "current": 26.406384266619035,
+      "error": null
+    },
+    {
+      "index": 64,
+      "timestamp": 32.000145336,
+      "current": 51.07218291263908,
+      "error": null
+    },
+    {
+      "index": 65,
+      "timestamp": 32.500210607000014,
+      "current": 99.53719032443284,
+      "error": null
+    },
+    {
+      "index": 66,
+      "timestamp": 33.000138599000024,
+      "current": 79.18872791588913,
+      "error": null
+    },
+    {
+      "index": 67,
+      "timestamp": 33.500272550000005,
+      "current": 67.20355736808287,
+      "error": null
+    },
+    {
+      "index": 68,
+      "timestamp": 34.00018180700002,
+      "current": 112.73350576272786,
+      "error": null
+    },
+    {
+      "index": 69,
+      "timestamp": 34.500236650000005,
+      "current": 16.79445770680322,
+      "error": null
+    },
+    {
+      "index": 70,
+      "timestamp": 35.000172857000024,
+      "current": 83.44271948069745,
+      "error": null
+    },
+    {
+      "index": 71,
+      "timestamp": 35.500148232000015,
+      "current": 91.38246395037389,
+      "error": null
+    },
+    {
+      "index": 72,
+      "timestamp": 36.000154967000014,
+      "current": 80.63772740879449,
+      "error": null
+    },
+    {
+      "index": 73,
+      "timestamp": 36.50017117200002,
+      "current": 32.25972031825912,
+      "error": null
+    },
+    {
+      "index": 74,
+      "timestamp": 37.00026638700001,
+      "current": 71.93022499708836,
+      "error": null
+    },
+    {
+      "index": 75,
+      "timestamp": 37.50018596300001,
+      "current": 47.42217228131347,
+      "error": null
+    },
+    {
+      "index": 76,
+      "timestamp": 38.000210115000016,
+      "current": 6.263539538312127,
+      "error": null
+    },
+    {
+      "index": 77,
+      "timestamp": 38.50019416400002,
+      "current": 74.56051732453807,
+      "error": null
+    },
+    {
+      "index": 78,
+      "timestamp": 39.00026074600001,
+      "current": 27.485714110512266,
+      "error": null
+    },
+    {
+      "index": 79,
+      "timestamp": 39.50023563800002,
+      "current": 77.79673983815252,
+      "error": null
+    },
+    {
+      "index": 80,
+      "timestamp": 40.000235723,
+      "current": 23.26656958232204,
+      "error": null
+    },
+    {
+      "index": 81,
+      "timestamp": 40.500183636,
+      "current": 33.445394238056885,
+      "error": null
+    },
+    {
+      "index": 82,
+      "timestamp": 41.000175619000004,
+      "current": 22.37599701638365,
+      "error": null
+    },
+    {
+      "index": 83,
+      "timestamp": 41.500285046000016,
+      "current": 24.29182529820154,
+      "error": null
+    },
+    {
+      "index": 84,
+      "timestamp": 42.00019534100002,
+      "current": 61.62756649638434,
+      "error": null
+    },
+    {
+      "index": 85,
+      "timestamp": 42.500161667000015,
+      "current": 55.101494665459505,
+      "error": null
+    },
+    {
+      "index": 86,
+      "timestamp": 43.000153106,
+      "current": 78.40523863072114,
+      "error": null
+    },
+    {
+      "index": 87,
+      "timestamp": 43.50015935000002,
+      "current": 45.37627044505085,
+      "error": null
+    },
+    {
+      "index": 88,
+      "timestamp": 44.000274925000014,
+      "current": null,
+      "error": "Invalid reply from port 5001: 'ERR:SIMULATED'."
+    },
+    {
+      "index": 89,
+      "timestamp": 44.500199751000025,
+      "current": 33.342506272945,
+      "error": null
+    },
+    {
+      "index": 90,
+      "timestamp": 45.00017071800002,
+      "current": 49.81765053937202,
+      "error": null
+    },
+    {
+      "index": 91,
+      "timestamp": 45.500203423000016,
+      "current": 1939.7336548485398,
+      "error": null
+    },
+    {
+      "index": 92,
+      "timestamp": 46.000167250000004,
+      "current": 46.9691798209774,
+      "error": null
+    },
+    {
+      "index": 93,
+      "timestamp": 46.50027388800001,
+      "current": 57.263197496508546,
+      "error": null
+    },
+    {
+      "index": 94,
+      "timestamp": 47.00018407000002,
+      "current": 73.0720059015942,
+      "error": null
+    },
+    {
+      "index": 95,
+      "timestamp": 47.500288995000005,
+      "current": 98.0238923181906,
+      "error": null
+    },
+    {
+      "index": 96,
+      "timestamp": 48.00016935400001,
+      "current": 35.72099672358853,
+      "error": null
+    },
+    {
+      "index": 97,
+      "timestamp": 48.50017535800001,
+      "current": 15.361281894949762,
+      "error": null
+    },
+    {
+      "index": 98,
+      "timestamp": 49.000180778000015,
+      "current": 28.235435547138007,
+      "error": null
+    },
+    {
+      "index": 99,
+      "timestamp": 49.501367996,
+      "current": 45.79828738733682,
+      "error": null
+    }
+  ],
+  "statistics": {
+    "count": 95,
+    "failed_count": 5,
+    "mean": 239.29446909313077,
+    "median": 61.62756649638434,
+    "std": 923.7190971904078,
+    "min_value": 6.263539538312127,
+    "max_value": 6117.303018756778,
+    "cv_percent": 386.0177381830361
+  }
+}

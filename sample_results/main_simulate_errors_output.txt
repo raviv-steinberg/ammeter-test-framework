@@ -1,0 +1,86 @@
+Log file: /tmp/gen/results/logs/20261122_183444.log
+Error simulation is ON: the emulators fail on purpose, as set in config.yaml.
+[2026-11-22 18:34:44,377] [INFO] runner.py:start_emulators: Error simulation on greenlee: {'no_reply': 0.05, 'invalid_reply': 0.0, 'delay': 0.0, 'spike': 0.0, 'delay_seconds': 3, 'spike_factor': 50}
+[2026-11-22 18:34:44,377] [INFO] runner.py:start_emulators: Error simulation on entes: {'no_reply': 0.0, 'invalid_reply': 0.05, 'delay': 0.0, 'spike': 0.05, 'delay_seconds': 3, 'spike_factor': 50}
+[2026-11-22 18:34:44,377] [INFO] runner.py:start_emulators: Error simulation on circutor: {'no_reply': 0.0, 'invalid_reply': 0.0, 'delay': 0.03, 'spike': 0.0, 'delay_seconds': 3, 'spike_factor': 50}
+[2026-11-22 18:34:44,378] [INFO] base_ammeter.py:start_server: EntesAmmeter is running on port 5001
+[2026-11-22 18:34:44,378] [INFO] base_ammeter.py:start_server: CircutorAmmeter is running on port 5002
+[2026-11-22 18:34:44,378] [INFO] base_ammeter.py:start_server: GreenleeAmmeter is running on port 5000
+[2026-11-22 18:34:45,380] [INFO] test_framework.py:run_test: Testing greenlee (run 20261122_183445_a28bb67c): 100 samples every 0.500 s
+[2026-11-22 18:34:55,881] [WARNING] base_ammeter.py:handle_request: GreenleeAmmeter simulates fault 'no_reply' on port 5000
+[2026-11-22 18:34:55,882] [WARNING] sampler.py:run: Sample 21 failed: No data received from port 5000 for command b'MEASURE_GREENLEE -get_measurement'.
+[2026-11-22 18:35:33,381] [WARNING] base_ammeter.py:handle_request: GreenleeAmmeter simulates fault 'no_reply' on port 5000
+[2026-11-22 18:35:33,382] [WARNING] sampler.py:run: Sample 96 failed: No data received from port 5000 for command b'MEASURE_GREENLEE -get_measurement'.
+[2026-11-22 18:35:34,882] [INFO] test_framework.py:run_test: Finished greenlee in 49.50 s, 2 failed
+
+--- greenlee ---
+run id:   20261122_183445_a28bb67c
+started:  2026-11-22T18:34:45  duration: 49.50 s
+samples:  98  failed: 2
+mean:     0.3112 A
+median:   0.1289 A
+std:      0.7772 A
+min:      0.0119 A
+max:      5.6160 A
+cv:       249.7 %
+saved:    /tmp/gen/results/runs/20261122_183445_a28bb67c.json
+[2026-11-22 18:35:34,883] [INFO] test_framework.py:run_test: Testing entes (run 20261122_183534_028342b3): 100 samples every 0.500 s
+[2026-11-22 18:35:35,385] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'spike' on port 5001
+[2026-11-22 18:35:39,385] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'invalid_reply' on port 5001
+[2026-11-22 18:35:39,385] [WARNING] sampler.py:run: Sample 9 failed: Invalid reply from port 5001: 'ERR:SIMULATED'.
+[2026-11-22 18:35:48,884] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'invalid_reply' on port 5001
+[2026-11-22 18:35:48,885] [WARNING] sampler.py:run: Sample 28 failed: Invalid reply from port 5001: 'ERR:SIMULATED'.
+[2026-11-22 18:35:49,884] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'spike' on port 5001
+[2026-11-22 18:35:51,384] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'invalid_reply' on port 5001
+[2026-11-22 18:35:51,385] [WARNING] sampler.py:run: Sample 33 failed: Invalid reply from port 5001: 'ERR:SIMULATED'.
+[2026-11-22 18:35:56,385] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'invalid_reply' on port 5001
+[2026-11-22 18:35:56,385] [WARNING] sampler.py:run: Sample 43 failed: Invalid reply from port 5001: 'ERR:SIMULATED'.
+[2026-11-22 18:36:01,384] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'spike' on port 5001
+[2026-11-22 18:36:18,887] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'invalid_reply' on port 5001
+[2026-11-22 18:36:18,887] [WARNING] sampler.py:run: Sample 88 failed: Invalid reply from port 5001: 'ERR:SIMULATED'.
+[2026-11-22 18:36:20,384] [WARNING] base_ammeter.py:handle_request: EntesAmmeter simulates fault 'spike' on port 5001
+[2026-11-22 18:36:24,387] [INFO] test_framework.py:run_test: Finished entes in 49.50 s, 5 failed
+
+--- entes ---
+run id:   20261122_183534_028342b3
+started:  2026-11-22T18:35:34  duration: 49.50 s
+samples:  95  failed: 5
+mean:     239.2945 A
+median:   61.6276 A
+std:      923.7191 A
+min:      6.2635 A
+max:      6117.3030 A
+cv:       386.0 %
+saved:    /tmp/gen/results/runs/20261122_183534_028342b3.json
+[2026-11-22 18:36:24,392] [INFO] test_framework.py:run_test: Testing circutor (run 20261122_183624_8d36b3e8): 100 samples every 0.500 s
+[2026-11-22 18:36:28,393] [WARNING] base_ammeter.py:handle_request: CircutorAmmeter simulates fault 'delay' on port 5002
+[2026-11-22 18:36:30,396] [WARNING] sampler.py:run: Sample 8 failed: Cannot communicate with ammeter on port 5002: timed out.
+[2026-11-22 18:36:33,893] [WARNING] base_ammeter.py:handle_request: CircutorAmmeter simulates fault 'delay' on port 5002
+[2026-11-22 18:36:35,895] [WARNING] sampler.py:run: Sample 19 failed: Cannot communicate with ammeter on port 5002: timed out.
+[2026-11-22 18:36:57,893] [WARNING] base_ammeter.py:handle_request: CircutorAmmeter simulates fault 'delay' on port 5002
+[2026-11-22 18:36:59,895] [WARNING] sampler.py:run: Sample 67 failed: Cannot communicate with ammeter on port 5002: timed out.
+[2026-11-22 18:37:11,893] [WARNING] base_ammeter.py:handle_request: CircutorAmmeter simulates fault 'delay' on port 5002
+[2026-11-22 18:37:13,895] [WARNING] sampler.py:run: Sample 95 failed: Cannot communicate with ammeter on port 5002: timed out.
+[2026-11-22 18:37:14,896] [INFO] test_framework.py:run_test: Finished circutor in 50.50 s, 4 failed
+
+--- circutor ---
+run id:   20261122_183624_8d36b3e8
+started:  2026-11-22T18:36:24  duration: 50.50 s
+samples:  96  failed: 4
+mean:     0.0292 A
+median:   0.0290 A
+std:      0.0157 A
+min:      0.0055 A
+max:      0.0641 A
+cv:       53.7 %
+saved:    /tmp/gen/results/runs/20261122_183624_8d36b3e8.json
+
+This session:
+run id                    ammeter   samples  failed  mean        median      std         cv %    
+-------------------------------------------------------------------------------------------------
+20261122_183445_a28bb67c  greenlee  98       2       0.3112      0.1289      0.7772      249.7   
+20261122_183534_028342b3  entes     95       5       239.2945    61.6276     923.7191    386.0   
+20261122_183624_8d36b3e8  circutor  96       4       0.0292      0.0290      0.0157      53.7    
+[2026-11-22 18:37:14,906] [INFO] html_report.py:generate_report: Report written to /tmp/gen/results/reports/report_20261122_183445.html
+
+Report:   /tmp/gen/results/reports/report_20261122_183445.html

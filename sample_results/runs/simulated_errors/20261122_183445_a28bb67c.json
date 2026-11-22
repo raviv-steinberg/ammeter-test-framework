@@ -1,0 +1,641 @@
+{
+  "run_id": "20261122_183445_a28bb67c",
+  "ammeter_type": "greenlee",
+  "started_at": "2026-11-22T18:34:45",
+  "duration_seconds": 49.501146842,
+  "measurements_count": 100,
+  "interval_seconds": 0.5,
+  "metadata": {
+    "host": "localhost",
+    "port": 5000,
+    "command": "MEASURE_GREENLEE -get_measurement",
+    "sampling_config": {
+      "measurements_count": 100,
+      "total_duration_seconds": null,
+      "sampling_frequency_hz": 2
+    },
+    "timeout_seconds": 2,
+    "error_simulation": {
+      "no_reply": 0.05,
+      "invalid_reply": 0.0,
+      "delay": 0.0,
+      "spike": 0.0,
+      "delay_seconds": 3,
+      "spike_factor": 50
+    },
+    "python_version": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39"
+  },
+  "samples": [
+    {
+      "index": 0,
+      "timestamp": 2.34800000953328e-06,
+      "current": 0.1188830037486398,
+      "error": null
+    },
+    {
+      "index": 1,
+      "timestamp": 0.5001964690000023,
+      "current": 0.47803807600198633,
+      "error": null
+    },
+    {
+      "index": 2,
+      "timestamp": 1.0002043490000005,
+      "current": 0.236718669807087,
+      "error": null
+    },
+    {
+      "index": 3,
+      "timestamp": 1.5001296000000082,
+      "current": 0.20002624369813699,
+      "error": null
+    },
+    {
+      "index": 4,
+      "timestamp": 2.0001738729999943,
+      "current": 0.1435038214291766,
+      "error": null
+    },
+    {
+      "index": 5,
+      "timestamp": 2.5001656340000125,
+      "current": 0.10440367634820254,
+      "error": null
+    },
+    {
+      "index": 6,
+      "timestamp": 3.000138081000017,
+      "current": 0.021346861512405963,
+      "error": null
+    },
+    {
+      "index": 7,
+      "timestamp": 3.5001939400000026,
+      "current": 0.33212674653652435,
+      "error": null
+    },
+    {
+      "index": 8,
+      "timestamp": 4.000161017000011,
+      "current": 0.20651053305053174,
+      "error": null
+    },
+    {
+      "index": 9,
+      "timestamp": 4.500099042000016,
+      "current": 0.016840352547988994,
+      "error": null
+    },
+    {
+      "index": 10,
+      "timestamp": 5.000237970000001,
+      "current": 4.268207132853107,
+      "error": null
+    },
+    {
+      "index": 11,
+      "timestamp": 5.500126365,
+      "current": 0.7413739685161228,
+      "error": null
+    },
+    {
+      "index": 12,
+      "timestamp": 6.000229520000005,
+      "current": 0.09821162014234404,
+      "error": null
+    },
+    {
+      "index": 13,
+      "timestamp": 6.500118455000006,
+      "current": 0.11682816419735598,
+      "error": null
+    },
+    {
+      "index": 14,
+      "timestamp": 7.000317013,
+      "current": 0.17022661833701927,
+      "error": null
+    },
+    {
+      "index": 15,
+      "timestamp": 7.500152119000006,
+      "current": 0.3949291358407478,
+      "error": null
+    },
+    {
+      "index": 16,
+      "timestamp": 8.00018853100002,
+      "current": 0.05128633625983668,
+      "error": null
+    },
+    {
+      "index": 17,
+      "timestamp": 8.500100715000002,
+      "current": 0.2459938164145061,
+      "error": null
+    },
+    {
+      "index": 18,
+      "timestamp": 9.000235676000017,
+      "current": 0.10659393371052223,
+      "error": null
+    },
+    {
+      "index": 19,
+      "timestamp": 9.500102942000012,
+      "current": 0.1671491093372155,
+      "error": null
+    },
+    {
+      "index": 20,
+      "timestamp": 10.000158905999996,
+      "current": 0.20132014959880723,
+      "error": null
+    },
+    {
+      "index": 21,
+      "timestamp": 10.500138238000005,
+      "current": null,
+      "error": "No data received from port 5000 for command b'MEASURE_GREENLEE -get_measurement'."
+    },
+    {
+      "index": 22,
+      "timestamp": 11.000334135000003,
+      "current": 0.08191152687644068,
+      "error": null
+    },
+    {
+      "index": 23,
+      "timestamp": 11.500144809000005,
+      "current": 0.0814385418262843,
+      "error": null
+    },
+    {
+      "index": 24,
+      "timestamp": 12.000195934999994,
+      "current": 0.12721250084849217,
+      "error": null
+    },
+    {
+      "index": 25,
+      "timestamp": 12.500153183999998,
+      "current": 0.06544932665369156,
+      "error": null
+    },
+    {
+      "index": 26,
+      "timestamp": 13.000276113000012,
+      "current": 0.14203839229400994,
+      "error": null
+    },
+    {
+      "index": 27,
+      "timestamp": 13.500177053000016,
+      "current": 1.0368030195262774,
+      "error": null
+    },
+    {
+      "index": 28,
+      "timestamp": 14.000227507999995,
+      "current": 1.4350449937680168,
+      "error": null
+    },
+    {
+      "index": 29,
+      "timestamp": 14.500601461000002,
+      "current": 0.14358778721449791,
+      "error": null
+    },
+    {
+      "index": 30,
+      "timestamp": 15.000157720999994,
+      "current": 0.045172860110541654,
+      "error": null
+    },
+    {
+      "index": 31,
+      "timestamp": 15.500186360000015,
+      "current": 0.10730570041683607,
+      "error": null
+    },
+    {
+      "index": 32,
+      "timestamp": 16.00028199800002,
+      "current": 0.16984795760149646,
+      "error": null
+    },
+    {
+      "index": 33,
+      "timestamp": 16.50035375600001,
+      "current": 0.036969156426145844,
+      "error": null
+    },
+    {
+      "index": 34,
+      "timestamp": 17.00018934900001,
+      "current": 0.23824678059535084,
+      "error": null
+    },
+    {
+      "index": 35,
+      "timestamp": 17.500175083000016,
+      "current": 0.1578047145355353,
+      "error": null
+    },
+    {
+      "index": 36,
+      "timestamp": 18.00026907100002,
+      "current": 0.19676350992450756,
+      "error": null
+    },
+    {
+      "index": 37,
+      "timestamp": 18.500257363000003,
+      "current": 5.6160289082953305,
+      "error": null
+    },
+    {
+      "index": 38,
+      "timestamp": 19.00019444100002,
+      "current": 0.25314352220229935,
+      "error": null
+    },
+    {
+      "index": 39,
+      "timestamp": 19.500167268000013,
+      "current": 0.2624984407158189,
+      "error": null
+    },
+    {
+      "index": 40,
+      "timestamp": 20.000290734000004,
+      "current": 0.9723536821510822,
+      "error": null
+    },
+    {
+      "index": 41,
+      "timestamp": 20.500142780999994,
+      "current": 0.05182683607889088,
+      "error": null
+    },
+    {
+      "index": 42,
+      "timestamp": 21.00017875200001,
+      "current": 0.07583665206157428,
+      "error": null
+    },
+    {
+      "index": 43,
+      "timestamp": 21.500142549999993,
+      "current": 0.1134225427453984,
+      "error": null
+    },
+    {
+      "index": 44,
+      "timestamp": 22.000166522,
+      "current": 0.26600463451014933,
+      "error": null
+    },
+    {
+      "index": 45,
+      "timestamp": 22.500215308999998,
+      "current": 0.10093628229346852,
+      "error": null
+    },
+    {
+      "index": 46,
+      "timestamp": 23.000223457999994,
+      "current": 0.15600446587137448,
+      "error": null
+    },
+    {
+      "index": 47,
+      "timestamp": 23.500203310000018,
+      "current": 0.10454994656723615,
+      "error": null
+    },
+    {
+      "index": 48,
+      "timestamp": 24.000213094999992,
+      "current": 0.1751015887542085,
+      "error": null
+    },
+    {
+      "index": 49,
+      "timestamp": 24.500247849000004,
+      "current": 0.05698303286692118,
+      "error": null
+    },
+    {
+      "index": 50,
+      "timestamp": 25.000206823000013,
+      "current": 0.09118611534081046,
+      "error": null
+    },
+    {
+      "index": 51,
+      "timestamp": 25.500155057,
+      "current": 0.23176384113033663,
+      "error": null
+    },
+    {
+      "index": 52,
+      "timestamp": 26.000235895000003,
+      "current": 0.07738077915847161,
+      "error": null
+    },
+    {
+      "index": 53,
+      "timestamp": 26.500203475999996,
+      "current": 0.1338180472470473,
+      "error": null
+    },
+    {
+      "index": 54,
+      "timestamp": 27.000203174000006,
+      "current": 0.11915696396945981,
+      "error": null
+    },
+    {
+      "index": 55,
+      "timestamp": 27.50171617800001,
+      "current": 0.15442884782748265,
+      "error": null
+    },
+    {
+      "index": 56,
+      "timestamp": 28.000206945000002,
+      "current": 0.17718648038063572,
+      "error": null
+    },
+    {
+      "index": 57,
+      "timestamp": 28.500205262999998,
+      "current": 3.304430700666575,
+      "error": null
+    },
+    {
+      "index": 58,
+      "timestamp": 29.00020919900001,
+      "current": 0.08272163690334142,
+      "error": null
+    },
+    {
+      "index": 59,
+      "timestamp": 29.50017808300001,
+      "current": 0.2208368561597196,
+      "error": null
+    },
+    {
+      "index": 60,
+      "timestamp": 30.000182779,
+      "current": 0.11962715221099826,
+      "error": null
+    },
+    {
+      "index": 61,
+      "timestamp": 30.50018224500002,
+      "current": 0.4406300776431484,
+      "error": null
+    },
+    {
+      "index": 62,
+      "timestamp": 31.000181193000003,
+      "current": 0.13061448361824085,
+      "error": null
+    },
+    {
+      "index": 63,
+      "timestamp": 31.500257143,
+      "current": 0.16731423122950811,
+      "error": null
+    },
+    {
+      "index": 64,
+      "timestamp": 32.00017221000002,
+      "current": 0.117717501001067,
+      "error": null
+    },
+    {
+      "index": 65,
+      "timestamp": 32.50021207400002,
+      "current": 0.0711960785795775,
+      "error": null
+    },
+    {
+      "index": 66,
+      "timestamp": 33.00023755700002,
+      "current": 0.08760313508046409,
+      "error": null
+    },
+    {
+      "index": 67,
+      "timestamp": 33.50017301600002,
+      "current": 0.033453825413762704,
+      "error": null
+    },
+    {
+      "index": 68,
+      "timestamp": 34.00017185600001,
+      "current": 0.10198753382276865,
+      "error": null
+    },
+    {
+      "index": 69,
+      "timestamp": 34.50023115800002,
+      "current": 0.021876530690478502,
+      "error": null
+    },
+    {
+      "index": 70,
+      "timestamp": 35.000207431999996,
+      "current": 0.07145477300812778,
+      "error": null
+    },
+    {
+      "index": 71,
+      "timestamp": 35.500274246000004,
+      "current": 0.44272541177019953,
+      "error": null
+    },
+    {
+      "index": 72,
+      "timestamp": 36.00023089000001,
+      "current": 0.07077161667496805,
+      "error": null
+    },
+    {
+      "index": 73,
+      "timestamp": 36.500183023999995,
+      "current": 0.27936712058492275,
+      "error": null
+    },
+    {
+      "index": 74,
+      "timestamp": 37.00018179200001,
+      "current": 0.11490423438168892,
+      "error": null
+    },
+    {
+      "index": 75,
+      "timestamp": 37.500188358,
+      "current": 0.10653319705726279,
+      "error": null
+    },
+    {
+      "index": 76,
+      "timestamp": 38.00016649400001,
+      "current": 0.18089681677481007,
+      "error": null
+    },
+    {
+      "index": 77,
+      "timestamp": 38.50023808200001,
+      "current": 0.08123146972803354,
+      "error": null
+    },
+    {
+      "index": 78,
+      "timestamp": 39.000165958,
+      "current": 0.011946013958637836,
+      "error": null
+    },
+    {
+      "index": 79,
+      "timestamp": 39.50018695200001,
+      "current": 0.0295327157151242,
+      "error": null
+    },
+    {
+      "index": 80,
+      "timestamp": 40.000220974,
+      "current": 0.28384718197155656,
+      "error": null
+    },
+    {
+      "index": 81,
+      "timestamp": 40.50028864500001,
+      "current": 0.14896805653203296,
+      "error": null
+    },
+    {
+      "index": 82,
+      "timestamp": 41.000219316,
+      "current": 0.20089552322679985,
+      "error": null
+    },
+    {
+      "index": 83,
+      "timestamp": 41.50020159000002,
+      "current": 0.023546302805067896,
+      "error": null
+    },
+    {
+      "index": 84,
+      "timestamp": 42.00016792600002,
+      "current": 0.16864522110600685,
+      "error": null
+    },
+    {
+      "index": 85,
+      "timestamp": 42.50017600200002,
+      "current": 0.35156924290055663,
+      "error": null
+    },
+    {
+      "index": 86,
+      "timestamp": 43.00022040100001,
+      "current": 0.07922670101445814,
+      "error": null
+    },
+    {
+      "index": 87,
+      "timestamp": 43.50023858100002,
+      "current": 0.13156538110808558,
+      "error": null
+    },
+    {
+      "index": 88,
+      "timestamp": 44.00022241799999,
+      "current": 0.07074403864921035,
+      "error": null
+    },
+    {
+      "index": 89,
+      "timestamp": 44.500169903,
+      "current": 0.1486022768456343,
+      "error": null
+    },
+    {
+      "index": 90,
+      "timestamp": 45.00017455,
+      "current": 0.14719040109939333,
+      "error": null
+    },
+    {
+      "index": 91,
+      "timestamp": 45.500194136000005,
+      "current": 0.08898527728655446,
+      "error": null
+    },
+    {
+      "index": 92,
+      "timestamp": 46.00022962700001,
+      "current": 0.09960757200300308,
+      "error": null
+    },
+    {
+      "index": 93,
+      "timestamp": 46.50023698800001,
+      "current": 0.019337510974580897,
+      "error": null
+    },
+    {
+      "index": 94,
+      "timestamp": 47.000216975,
+      "current": 0.09732929758419553,
+      "error": null
+    },
+    {
+      "index": 95,
+      "timestamp": 47.500156428,
+      "current": 0.09752713104540774,
+      "error": null
+    },
+    {
+      "index": 96,
+      "timestamp": 48.00018099800002,
+      "current": null,
+      "error": "No data received from port 5000 for command b'MEASURE_GREENLEE -get_measurement'."
+    },
+    {
+      "index": 97,
+      "timestamp": 48.50018321100001,
+      "current": 0.018363152302624627,
+      "error": null
+    },
+    {
+      "index": 98,
+      "timestamp": 49.000217918999994,
+      "current": 0.045484290792050484,
+      "error": null
+    },
+    {
+      "index": 99,
+      "timestamp": 49.500143893,
+      "current": 0.3153665789606242,
+      "error": null
+    }
+  ],
+  "statistics": {
+    "count": 98,
+    "failed_count": 2,
+    "mean": 0.31124388366893524,
+    "median": 0.1289134922333665,
+    "std": 0.7771880268849343,
+    "min_value": 0.011946013958637836,
+    "max_value": 5.6160289082953305,
+    "cv_percent": 249.7038713575544
+  }
+}

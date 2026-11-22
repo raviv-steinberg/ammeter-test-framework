@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ammeter Test Report</title>
+<style>
+/* Styles shared by every layout: tooltip, chart parts, hidden state and the theme button icons. */
+.chart-tip { position: fixed; pointer-events: none; z-index: 1000; padding: 8px 11px; border-radius: 9px; background: var(--tip-bg); color: var(--tip-text); font-size: 12px; line-height: 1.5; box-shadow: 0 10px 30px rgba(0, 0, 0, .28); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; max-width: 280px; }
+.chart-tip.show { opacity: 1; transform: none; }
+.tip-bad { color: #ef4444; font-weight: 700; }
+.chart-svg { display: block; overflow: visible; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.axis-text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+.ref-line { stroke-dasharray: 5 4; stroke-width: 1.5; opacity: .85; color: var(--muted); }
+.ref-text { font-size: 11px; font-weight: 700; }
+.bar { transition: opacity .15s; cursor: default; }
+.bar:hover { opacity: .78; }
+.bar-label, .bar-value { fill: var(--text); font-size: 12px; font-weight: 600; font-family: inherit; }
+.fail-mark { fill: #ef4444; font-size: 13px; font-weight: 800; }
+.chart-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.ring-track { stroke: var(--grid); }
+.ring-text { fill: var(--text); font-size: 17px; font-weight: 700; font-family: inherit; }
+.is-hidden { display: none !important; }
+/* Light theme shows the moon (switch to dark), dark theme shows the sun (switch to light). */
+.theme-btn .icon-sun { display: none; }
+[data-theme="dark"] .theme-btn .icon-sun { display: block; }
+[data-theme="dark"] .theme-btn .icon-moon { display: none; }
+html { transition: background-color .25s; }
+
+:root { --bg: #eef0f7; --tile: rgba(255,255,255,.78); --tile-solid: #fff; --text: #14142b; --muted: #6e7191; --border: rgba(20,20,43,.08); --grid: rgba(20,20,43,.07); --accent: #7c3aed; --tip-bg: #14142b; --tip-text: #fff; --bad: #dc2626; --warn: #d97706; --hero-a: #7c3aed; --hero-b: #2563eb; --hero-c: #10b981; }
+[data-theme="dark"] { --bg: #07070f; --tile: rgba(22,22,40,.72); --tile-solid: #16162a; --text: #f0f0ff; --muted: #9a9cc0; --border: rgba(255,255,255,.08); --grid: rgba(255,255,255,.06); --accent: #a78bfa; --tip-bg: #f0f0ff; --tip-text: #07070f; --bad: #f87171; --warn: #fbbf24; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI Variable", "Segoe UI", -apple-system, Roboto, sans-serif; font-size: 14px; min-height: 100vh; }
+body::before { content: ""; position: fixed; inset: -20%; z-index: -1; background: radial-gradient(40% 40% at 15% 10%, color-mix(in srgb, var(--hero-a) 22%, transparent), transparent), radial-gradient(35% 35% at 90% 20%, color-mix(in srgb, var(--hero-b) 18%, transparent), transparent), radial-gradient(40% 40% at 60% 100%, color-mix(in srgb, var(--hero-c) 16%, transparent), transparent); filter: blur(20px); }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 22px 24px 50px; }
+.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.brand { font-weight: 800; letter-spacing: -.01em; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+.brand i { width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, var(--hero-a), var(--hero-c)); display: inline-block; }
+.actions { display: flex; gap: 8px; position: relative; }
+.icon-btn { width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--border); background: var(--tile); backdrop-filter: blur(14px); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { color: var(--accent); }
+.panel { position: absolute; right: 0; top: 52px; width: 250px; background: var(--tile-solid); border: 1px solid var(--border); border-radius: 18px; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.18); z-index: 20; display: none; }
+.panel.open { display: block; animation: pop .16s ease; }
+@keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.panel h4 { margin: 2px 4px 10px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.opt { display: flex; align-items: center; justify-content: space-between; padding: 8px 6px; border-radius: 10px; cursor: pointer; }
+.opt:hover { background: var(--grid); }
+.opt input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.t { background: var(--tile); backdrop-filter: blur(18px); border: 1px solid var(--border); border-radius: 22px; padding: 20px; min-width: 0; }
+.t h3 { margin: 0 0 2px; font-size: 15px; }
+.t .hint { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; }
+.no-data { display: none !important; }
+.hero { position: relative; overflow: hidden; color: #fff; background: linear-gradient(130deg, var(--hero-a), var(--hero-b) 60%, var(--hero-c)); border: none; padding: 30px; }
+.hero.failed { background: linear-gradient(130deg, #b91c1c, #7c2d12); }
+.hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.12); }
+.hero .k { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; opacity: .85; font-weight: 700; }
+.hero h1 { font-size: 40px; margin: 8px 0 8px; letter-spacing: -.03em; line-height: 1.05; }
+.hero p { margin: 0; opacity: .92; max-width: 600px; line-height: 1.55; }
+.hero .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; position: relative; z-index: 1; }
+.hero .chips span { background: rgba(255,255,255,.18); padding: 5px 11px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; height: 230px; padding-top: 10px; }
+.step { flex: 1; max-width: 120px; text-align: center; }
+.step .bar { border-radius: 14px 14px 6px 6px; display: grid; place-items: start center; padding-top: 10px; font-size: 26px; font-weight: 900; color: #fff; }
+.step .nm { font-weight: 800; margin-bottom: 2px; }
+.step .cv { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.stat-tile { display: flex; flex-direction: column; justify-content: space-between; }
+.stat-tile .n { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.stat-tile .n.bad { color: var(--bad); }
+.meter-tile { position: relative; overflow: hidden; }
+.meter-tile::before { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 14%, transparent), transparent 55%); pointer-events: none; }
+.meter-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; position: relative; }
+.meter-head b { font-size: 17px; }
+.tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); white-space: nowrap; }
+.meter-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 6px; position: relative; }
+.meter-nums div { background: var(--grid); border-radius: 12px; padding: 8px 10px; }
+.meter-nums small { color: var(--muted); display: block; font-size: 11px; }
+.meter-nums b { font-size: 15px; }
+.warn { position: relative; margin: 2px 0 8px; padding: 7px 10px; border-radius: 10px; font-size: 12px; line-height: 1.5; background: color-mix(in srgb, #f59e0b 14%, transparent); color: var(--text); }
+.warn b { color: var(--warn); }
+.empty { position: relative; padding: 28px 10px; text-align: center; color: var(--muted); line-height: 1.6; }
+.empty b { color: var(--bad); display: block; font-size: 16px; }
+table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-variant-numeric: tabular-nums; }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; text-align: right; padding: 0 12px; white-space: nowrap; }
+td { background: var(--grid); padding: 11px 12px; text-align: right; white-space: nowrap; }
+td:first-child { border-radius: 12px 0 0 12px; text-align: left; }
+td:last-child { border-radius: 0 12px 12px 0; }
+th:first-child { text-align: left; }
+td.wrap-text { white-space: normal; text-align: left; color: var(--muted); }
+.table-wrap { overflow-x: auto; }
+tr.row-bad td { background: color-mix(in srgb, var(--bad) 11%, transparent); }
+tr.row-warn td { background: color-mix(in srgb, var(--warn) 13%, transparent); }
+tr.row-bad td:first-child { box-shadow: inset 4px 0 var(--bad); }
+tr.row-warn td:first-child { box-shadow: inset 4px 0 var(--warn); }
+tr.row-bad td.wrap-text, tr.row-warn td.wrap-text { color: var(--text); }
+.tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; }
+.tag.bad { background: var(--bad); }
+.tag.warn { background: var(--warn); }
+[data-theme="dark"] .tag { color: #07070f; }
+.num-bad { color: var(--bad); font-weight: 700; }
+.num-warn { color: var(--warn); font-weight: 700; }
+.key { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; }
+.key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+/* Test result tiles, shown only in the pytest report. */
+:root { --pass: #10b981; --fail: #ef4444; --error: #f97316; --skip: #94a3b8; --xfail: #8b5cf6; --code: #f6f7fb; }
+[data-theme="dark"] { --code: #0e0e1c; }
+.s3 { grid-column: span 3; }
+.section { grid-column: span 12; display: flex; align-items: baseline; gap: 12px; margin: 14px 4px 0; }
+.section h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.section span { color: var(--muted); font-size: 13px; }
+.stat-tile .n.good { color: var(--pass); }
+.rate { display: flex; align-items: center; gap: 22px; }
+.rate .ring { width: 140px; height: 140px; flex: none; }
+.legend-list { display: grid; gap: 8px; font-size: 13px; flex: 1; }
+.legend-list span { display: flex; align-items: center; gap: 8px; }
+.legend-list i { width: 10px; height: 10px; border-radius: 3px; }
+.legend-list b { margin-left: auto; }
+.cmd { margin-top: 14px; font-size: 12px; color: var(--muted); }
+.cmd code { background: var(--grid); padding: 2px 8px; border-radius: 8px; color: var(--text); }
+.rows { display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+.row .label { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.track { grid-column: 1 / -1; height: 9px; border-radius: 9px; background: var(--grid); overflow: hidden; display: flex; }
+.track i { display: block; height: 100%; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.fchip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 99px; border: 1px solid var(--border); background: var(--grid); cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; }
+.fchip input { accent-color: var(--accent); margin: 0; }
+.fchip i { width: 8px; height: 8px; border-radius: 50%; }
+.search { flex: 1; min-width: 180px; padding: 8px 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--tile-solid); color: var(--text); font: inherit; }
+select.search { flex: 0 1 200px; }
+.group { margin-top: 14px; }
+.group-title { font-weight: 800; font-size: 13px; margin: 0 0 6px; }
+.group-title small { color: var(--muted); font-weight: 600; margin-left: 6px; }
+.test { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 10px 12px; border-radius: 12px; background: var(--grid); margin-bottom: 6px; }
+.pill { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 99px; text-align: center; color: #fff; text-transform: uppercase; letter-spacing: .04em; }
+.test .name { font-weight: 600; word-break: break-word; }
+.test .doc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.test .marks { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.test .marks span { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
+.test .dur { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.test details { grid-column: 2 / -1; }
+.test summary { cursor: pointer; color: var(--fail); font-weight: 700; font-size: 12px; }
+.test pre { background: var(--code); border: 1px solid var(--border); border-radius: 12px; padding: 12px; overflow: auto; font-size: 12px; line-height: 1.45; max-height: 420px; white-space: pre; margin: 8px 0 0; }
+footer { margin-top: 22px; color: var(--muted); font-size: 12px; text-align: center; }
+@media (max-width: 1080px) { .s8, .s7, .s6, .s5 { grid-column: span 12; } .s4, .s3 { grid-column: span 6; } }
+@media (max-width: 680px) { .s4, .s3 { grid-column: span 12; } .test { grid-template-columns: 1fr; } .test details { grid-column: 1; } .rate { flex-direction: column; } .hero h1 { font-size: 30px; } .wrap { padding: 14px 12px 40px; } .t { border-radius: 18px; padding: 16px; } }
+@media print { .actions { display: none; } body::before { display: none; } .t { break-inside: avoid; backdrop-filter: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><i></i>Ammeter Test Report</div>
+    <div class="actions">
+      <button class="icon-btn" id="settings-btn" title="Choose what to show"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+      <button class="icon-btn theme-btn" data-theme-toggle title="Switch light / dark"></button>
+      <div class="panel" id="panel"><h4>Show tiles</h4><div id="opts"></div></div>
+    </div>
+  </div>
+
+  <div class="bento">
+    <div class="t hero s8" data-chart="hero" id="hero"></div>
+    <div class="t s4" data-chart="podium" id="podium-tile"><h3>Reliability podium</h3><div class="hint">Lowest coefficient of variation wins.</div><div class="podium" id="podium"></div></div>
+
+    <div class="t s4 stat-tile kpi" data-chart="kpis"><div class="hint">Samples</div><div class="n" id="k-samples"></div><div class="hint" id="k-samples-s"></div></div>
+    <div class="t s4 stat-tile kpi" data-chart="kpis"><div class="hint">Failed</div><div class="n" id="k-failed"></div><div class="hint" id="k-failed-s"></div></div>
+    <div class="t s4 stat-tile kpi" data-chart="kpis"><div class="hint">Timing precision</div><div class="n" id="k-timing"></div><div class="hint">largest gap between planned and actual sample start</div></div>
+    <div class="t s3 stat-tile kpi no-data" data-chart="kpis" id="k-tests-tile"><div class="hint">pytest</div><div class="n" id="k-tests"></div><div class="hint" id="k-tests-s"></div></div>
+
+    <div id="meter-tiles" style="display:contents"></div>
+
+    <div class="t s7" data-chart="overlay" id="overlay-tile"><h3>All ammeters, one scale</h3><div class="hint">Every sample divided by its run mean, so different scales can be compared.</div><div id="overlay"></div></div>
+    <div class="t s5" data-chart="spread" id="spread-tile"><h3>Spread</h3><div class="hint">Box: middle 50% of the samples. Dashed line: the mean.</div><div id="box"></div></div>
+
+    <div class="t s6" data-chart="accuracy" id="accuracy-tile"><h3>Accuracy vs theory</h3><div class="hint">|measured mean − expected mean| / expected mean</div><div id="acc"></div></div>
+    <div class="t s6" data-chart="history"><h3>History</h3><div class="hint">Coefficient of variation of earlier saved runs, then this run.</div><div id="hist"></div></div>
+
+    <div class="t s12" data-chart="table"><h3>Statistics</h3><div class="hint">Values in amperes.</div><div class="table-wrap"><table id="table"></table></div></div>
+    <div class="t s12" data-chart="failures" id="failures-tile"><h3>Failed and out-of-range samples</h3><div class="hint">Every sample that did not return a value, and every value the ammeter cannot really measure.</div><div class="hint"><span class="key"><i style="background:var(--bad)"></i>failed: no value</span><span class="key"><i style="background:var(--warn)"></i>out of range: a value the ammeter cannot measure</span></div><div class="table-wrap"><table id="failures"></table></div></div>
+    <div class="section no-data" id="tests-section"><h2>Test results</h2><span id="tests-section-s"></span></div>
+    <div class="t s4 no-data" data-chart="test-rate" id="test-rate-tile"><h3>Pass rate</h3><div class="hint" id="test-verdict"></div><div class="rate"><div id="test-ring"></div><div class="legend-list" id="test-legend"></div></div><div class="cmd" id="test-cmd"></div></div>
+    <div class="t s4 no-data" data-chart="test-files" id="test-files-tile"><h3>By file</h3><div class="hint">Green: passed · red: failed or error · grey: skipped</div><div class="rows" id="test-files"></div></div>
+    <div class="t s4 no-data" data-chart="test-markers" id="test-markers-tile"><h3>By marker</h3><div class="hint">Select tests with <b>-m marker</b>.</div><div class="rows" id="test-markers"></div></div>
+    <div class="t s12 no-data" data-chart="test-slowest" id="test-slowest-tile"><h3>Slowest tests</h3><div class="hint">Setup, call and teardown together.</div><div class="rows" id="test-slowest"></div></div>
+    <div class="t s12 no-data" data-chart="test-failures" id="test-failures-tile"><h3>Failed tests</h3><div class="hint">Every failed test with its message.</div><div id="test-failures"></div></div>
+    <div class="t s12 no-data" data-chart="test-list" id="test-list-tile"><h3>All tests</h3><div class="hint">Filter by result, marker or name.</div><div class="filters" id="test-filters"></div><div id="test-list"></div></div>
+  </div>
+  <footer id="footer"></footer>
+</div>
+<script>
+/**
+ * Tiny SVG chart library for the ammeter report. No dependencies, works offline.
+ * Colors of axes and grid come from CSS classes, so charts follow the light or dark theme by themselves.
+ */
+const Charts = (() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  let tipNode = null;
+
+  /** Create an SVG element with attributes and append it to a parent. */
+  function svgEl(name, attrs, parent) {
+    const node = document.createElementNS(NS, name);
+    for (const key in attrs) node.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  /** The single floating tooltip shared by all charts. */
+  function tip() {
+    if (!tipNode) {
+      tipNode = document.createElement('div');
+      tipNode.className = 'chart-tip';
+      document.body.appendChild(tipNode);
+    }
+    return tipNode;
+  }
+
+  /** Show a tooltip with the given HTML while the mouse is over the node. */
+  function bindTip(node, html) {
+    node.addEventListener('mouseenter', () => { const t = tip(); t.innerHTML = html; t.classList.add('show'); });
+    node.addEventListener('mousemove', (e) => {
+      const t = tip();
+      const x = Math.min(e.clientX + 14, window.innerWidth - t.offsetWidth - 8);
+      t.style.left = x + 'px';
+      t.style.top = (e.clientY + 14) + 'px';
+    });
+    node.addEventListener('mouseleave', () => tip().classList.remove('show'));
+  }
+
+  /** Format a current value with a sensible number of digits. */
+  function fmt(value, digits) {
+    if (value === null || value === undefined || Number.isNaN(value)) return '–';
+    if (digits !== undefined) return value.toFixed(digits);
+    const a = Math.abs(value);
+    if (a === 0) return '0';
+    if (a >= 100) return value.toFixed(1);
+    if (a >= 1) return value.toFixed(2);
+    if (a >= 0.01) return value.toFixed(4);
+    return value.toFixed(5);
+  }
+
+  /** Format an axis tick and drop trailing zeros, so 0.5000 becomes 0.5. */
+  function tick(value, digits) {
+    const text = fmt(value, digits);
+    return text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
+  }
+
+  /** Round axis limits to friendly numbers and return the tick positions. */
+  function niceTicks(min, max, count = 5) {
+    if (min === max) { min -= 1; max += 1; }
+    const raw = (max - min) / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+    const lo = Math.floor(min / step) * step;
+    const hi = Math.ceil(max / step) * step;
+    const ticks = [];
+    for (let v = lo; v <= hi + step / 2; v += step) ticks.push(+v.toPrecision(12));
+    return { lo, hi, ticks };
+  }
+
+  /** Redraw the chart whenever its container changes size, so charts are always sharp and responsive. */
+  function responsive(container, draw) {
+    let lastWidth = -1;
+    const run = () => {
+      const width = container.clientWidth;
+      // Hidden charts have no width, they are drawn when they become visible again.
+      if (width === 0 || width === lastWidth) return;
+      lastWidth = width;
+      container.innerHTML = '';
+      draw(width);
+    };
+    new ResizeObserver(run).observe(container);
+    run();
+  }
+
+  /** Create an SVG with a plot area and return helpers for it. */
+  function frame(container, width, height, pad) {
+    const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, width, height, class: 'chart-svg' }, container);
+    return { svg, x0: pad.left, x1: width - pad.right, y0: height - pad.bottom, y1: pad.top };
+  }
+
+  /** Draw horizontal grid lines with value labels on the left. */
+  function yAxis(f, scale, ticks, unit) {
+    for (const t of ticks) {
+      const y = scale(t);
+      svgEl('line', { x1: f.x0, x2: f.x1, y1: y, y2: y, class: 'grid' }, f.svg);
+      const label = svgEl('text', { x: f.x0 - 8, y: y + 4, class: 'axis-text', 'text-anchor': 'end' }, f.svg);
+      label.textContent = tick(t) + (unit || '');
+    }
+  }
+
+  /**
+   * Line chart of one or more series.
+   * options: series [{name, color, points: [{x, y, label}]}], xLabel, refLines [{y, label, color}], height
+   */
+  function line(container, options) {
+    responsive(container, (width) => {
+      const height = options.height || 240;
+      const f = frame(container, width, height, { top: 14, right: 16, bottom: 30, left: 58 });
+      const all = options.series.flatMap((s) => s.points.filter((p) => p.y !== null));
+      const xs = all.map((p) => p.x);
+      const ys = all.map((p) => p.y).concat((options.refLines || []).map((r) => r.y));
+      const xMin = Math.min(...xs), xMax = Math.max(...xs);
+      const yt = niceTicks(options.zeroBased ? 0 : Math.min(...ys), Math.max(...ys));
+      const sx = (x) => f.x0 + (xMax === xMin ? 0.5 : (x - xMin) / (xMax - xMin)) * (f.x1 - f.x0);
+      const sy = (y) => f.y0 - (y - yt.lo) / (yt.hi - yt.lo) * (f.y0 - f.y1);
+      yAxis(f, sy, yt.ticks, options.unit);
+
+      // A few x labels, evenly spread.
+      const xt = niceTicks(xMin, xMax, Math.max(2, Math.floor(width / 110)));
+      for (const t of xt.ticks) {
+        if (t < xMin || t > xMax) continue;
+        // Index based axes (runs) only get whole numbers, so labels are never repeated.
+        if (options.xFormat && !Number.isInteger(t)) continue;
+        const label = svgEl('text', { x: sx(t), y: f.y0 + 18, class: 'axis-text', 'text-anchor': 'middle' }, f.svg);
+        label.textContent = options.xFormat ? options.xFormat(t) : tick(t) + (options.xUnit || '');
+      }
+
+      for (const ref of options.refLines || []) {
+        svgEl('line', { x1: f.x0, x2: f.x1, y1: sy(ref.y), y2: sy(ref.y), class: 'ref-line', stroke: ref.color || 'currentColor' }, f.svg);
+        const label = svgEl('text', { x: f.x1 - 4, y: sy(ref.y) - 5, class: 'ref-text', 'text-anchor': 'end', fill: ref.color || 'currentColor' }, f.svg);
+        label.textContent = ref.label;
+      }
+
+      for (const s of options.series) {
+        // Break the line where a sample failed.
+        let path = '';
+        let pen = false;
+        for (const p of s.points) {
+          if (p.y === null) { pen = false; continue; }
+          path += (pen ? 'L' : 'M') + sx(p.x).toFixed(1) + ' ' + sy(p.y).toFixed(1);
+          pen = true;
+        }
+        if (options.area && s.points.length) {
+          const ok = s.points.filter((p) => p.y !== null);
+          const area = `M${sx(ok[0].x)} ${f.y0}` + ok.map((p) => `L${sx(p.x)} ${sy(p.y)}`).join('') + `L${sx(ok[ok.length - 1].x)} ${f.y0}Z`;
+          svgEl('path', { d: area, fill: s.color, opacity: 0.12 }, f.svg);
+        }
+        svgEl('path', { d: path, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round' }, f.svg);
+        for (const p of s.points) {
+          if (p.y === null) {
+            const cross = svgEl('text', { x: sx(p.x), y: f.y0 - 4, class: 'fail-mark', 'text-anchor': 'middle' }, f.svg);
+            cross.textContent = '✕';
+            bindTip(cross, `<b>${s.name}</b><br>${p.label || ''}<br><span class="tip-bad">failed</span>`);
+            continue;
+          }
+          const dot = svgEl('circle', { cx: sx(p.x), cy: sy(p.y), r: options.dots === false ? 0 : 3.2, fill: s.color, class: 'dot' }, f.svg);
+          const hit = svgEl('circle', { cx: sx(p.x), cy: sy(p.y), r: 9, fill: 'transparent' }, f.svg);
+          bindTip(hit, `<b>${s.name}</b><br>${p.label || ''}<br>${fmt(p.y)}${options.unit || ''}`);
+          hit.addEventListener('mouseenter', () => dot.setAttribute('r', 5.5));
+          hit.addEventListener('mouseleave', () => dot.setAttribute('r', options.dots === false ? 0 : 3.2));
+        }
+      }
+      if (options.legend !== false && options.series.length > 1) legend(container, options.series);
+    });
+  }
+
+  /** Small legend under a chart. */
+  function legend(container, series) {
+    const box = document.createElement('div');
+    box.className = 'chart-legend';
+    box.innerHTML = series.map((s) => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join('');
+    container.appendChild(box);
+  }
+
+  /**
+   * Histogram of values.
+   * options: values, color, bins, refLines [{x, label, color}], unit
+   */
+  function histogram(container, options) {
+    responsive(container, (width) => {
+      const height = options.height || 220;
+      const f = frame(container, width, height, { top: 14, right: 16, bottom: 30, left: 40 });
+      const values = options.values.filter((v) => v !== null);
+      const bins = options.bins || 12;
+      let min = Math.min(...values), max = Math.max(...values);
+      // A single value or identical values still need a range to draw.
+      if (min === max) { const pad = Math.abs(min) * 0.1 || 1; min -= pad; max += pad; }
+      const size = (max - min) / bins;
+      const counts = new Array(bins).fill(0);
+      for (const v of values) counts[Math.min(bins - 1, Math.floor((v - min) / size))] += 1;
+      const yt = niceTicks(0, Math.max(...counts), 4);
+      const sy = (c) => f.y0 - c / yt.hi * (f.y0 - f.y1);
+      const sx = (v) => f.x0 + (v - min) / (max - min) * (f.x1 - f.x0);
+      for (const t of yt.ticks) {
+        svgEl('line', { x1: f.x0, x2: f.x1, y1: sy(t), y2: sy(t), class: 'grid' }, f.svg);
+        svgEl('text', { x: f.x0 - 8, y: sy(t) + 4, class: 'axis-text', 'text-anchor': 'end' }, f.svg).textContent = t;
+      }
+      const barWidth = (f.x1 - f.x0) / bins;
+      counts.forEach((c, i) => {
+        const x = f.x0 + i * barWidth;
+        const bar = svgEl('rect', { x: x + 1.5, y: sy(c), width: Math.max(1, barWidth - 3), height: f.y0 - sy(c), rx: 3, fill: options.color, class: 'bar' }, f.svg);
+        const from = min + i * size, to = from + size;
+        bindTip(bar, `${fmt(from)} – ${fmt(to)}${options.unit || ''}<br><b>${c}</b> sample${c === 1 ? '' : 's'}`);
+      });
+      for (const v of [min, (min + max) / 2, max]) {
+        svgEl('text', { x: sx(v), y: f.y0 + 18, class: 'axis-text', 'text-anchor': v === min ? 'start' : v === max ? 'end' : 'middle' }, f.svg).textContent = fmt(v);
+      }
+      for (const ref of options.refLines || []) {
+        const x = sx(ref.x);
+        svgEl('line', { x1: x, x2: x, y1: f.y1, y2: f.y0, class: 'ref-line', stroke: ref.color }, f.svg);
+        svgEl('text', { x: x + 4, y: f.y1 + 10 + (ref.offset || 0), class: 'ref-text', fill: ref.color }, f.svg).textContent = ref.label;
+      }
+    });
+  }
+
+  /**
+   * Bar chart with one bar per item.
+   * options: items [{label, value, color, note}], unit, digits, horizontal, refValue {value, label}
+   */
+  function bars(container, options) {
+    responsive(container, (width) => {
+      const items = options.items;
+      if (options.horizontal) {
+        const rowHeight = 38;
+        const height = items.length * rowHeight + 30;
+        const f = frame(container, width, height, { top: 8, right: 60, bottom: 22, left: 96 });
+        const maxValue = Math.max(...items.map((i) => Math.abs(i.value)), options.refValue ? options.refValue.value : 0);
+        const xt = niceTicks(0, maxValue, 4);
+        const sx = (v) => f.x0 + v / xt.hi * (f.x1 - f.x0);
+        for (const t of xt.ticks) {
+          svgEl('line', { x1: sx(t), x2: sx(t), y1: f.y1, y2: f.y0, class: 'grid' }, f.svg);
+          svgEl('text', { x: sx(t), y: f.y0 + 16, class: 'axis-text', 'text-anchor': 'middle' }, f.svg).textContent = tick(t, options.digits) + (options.unit || '');
+        }
+        items.forEach((item, i) => {
+          const y = f.y1 + i * rowHeight + 6;
+          svgEl('text', { x: f.x0 - 10, y: y + 17, class: 'bar-label', 'text-anchor': 'end' }, f.svg).textContent = item.label;
+          const bar = svgEl('rect', { x: f.x0, y, width: Math.max(2, sx(Math.abs(item.value)) - f.x0), height: 24, rx: 6, fill: item.color, class: 'bar' }, f.svg);
+          svgEl('text', { x: sx(Math.abs(item.value)) + 8, y: y + 17, class: 'bar-value' }, f.svg).textContent = fmt(item.value, options.digits) + (options.unit || '');
+          bindTip(bar, `<b>${item.label}</b><br>${fmt(item.value, options.digits)}${options.unit || ''}${item.note ? '<br>' + item.note : ''}`);
+        });
+        if (options.refValue) {
+          const x = sx(options.refValue.value);
+          svgEl('line', { x1: x, x2: x, y1: f.y1, y2: f.y0, class: 'ref-line', stroke: 'currentColor' }, f.svg);
+        }
+        return;
+      }
+      const height = options.height || 240;
+      const f = frame(container, width, height, { top: 24, right: 16, bottom: 30, left: 52 });
+      const maxValue = Math.max(...items.map((i) => i.value));
+      const yt = niceTicks(0, maxValue, 4);
+      const sy = (v) => f.y0 - v / yt.hi * (f.y0 - f.y1);
+      yAxis(f, sy, yt.ticks, options.unit);
+      const slot = (f.x1 - f.x0) / items.length;
+      const barWidth = Math.min(64, slot * 0.56);
+      items.forEach((item, i) => {
+        const cx = f.x0 + slot * (i + 0.5);
+        const bar = svgEl('rect', { x: cx - barWidth / 2, y: sy(item.value), width: barWidth, height: f.y0 - sy(item.value), rx: 8, fill: item.color, class: 'bar' }, f.svg);
+        svgEl('text', { x: cx, y: sy(item.value) - 7, class: 'bar-value', 'text-anchor': 'middle' }, f.svg).textContent = fmt(item.value, options.digits) + (options.unit || '');
+        svgEl('text', { x: cx, y: f.y0 + 18, class: 'axis-text', 'text-anchor': 'middle' }, f.svg).textContent = item.label;
+        bindTip(bar, `<b>${item.label}</b><br>${fmt(item.value, options.digits)}${options.unit || ''}${item.note ? '<br>' + item.note : ''}`);
+      });
+    });
+  }
+
+  /** Quartile of sorted values with linear interpolation. */
+  function quantile(sorted, q) {
+    const pos = (sorted.length - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+  }
+
+  /**
+   * Box plot with jittered points, one box per group.
+   * options: groups [{label, color, values}], unit
+   */
+  function box(container, options) {
+    responsive(container, (width) => {
+      const height = options.height || 260;
+      const f = frame(container, width, height, { top: 14, right: 16, bottom: 30, left: 52 });
+      const all = options.groups.flatMap((g) => g.values);
+      const yt = niceTicks(Math.min(...all), Math.max(...all));
+      const sy = (v) => f.y0 - (v - yt.lo) / (yt.hi - yt.lo) * (f.y0 - f.y1);
+      yAxis(f, sy, yt.ticks, options.unit);
+      if (options.refLine !== undefined) {
+        svgEl('line', { x1: f.x0, x2: f.x1, y1: sy(options.refLine), y2: sy(options.refLine), class: 'ref-line', stroke: 'currentColor' }, f.svg);
+      }
+      const slot = (f.x1 - f.x0) / options.groups.length;
+      options.groups.forEach((g, i) => {
+        const sorted = [...g.values].sort((a, b) => a - b);
+        const q1 = quantile(sorted, 0.25), q2 = quantile(sorted, 0.5), q3 = quantile(sorted, 0.75);
+        const cx = f.x0 + slot * (i + 0.5);
+        const w = Math.min(70, slot * 0.42);
+        svgEl('line', { x1: cx, x2: cx, y1: sy(sorted[0]), y2: sy(sorted[sorted.length - 1]), stroke: g.color, 'stroke-width': 1.5 }, f.svg);
+        const rect = svgEl('rect', { x: cx - w / 2, y: sy(q3), width: w, height: Math.max(2, sy(q1) - sy(q3)), rx: 6, fill: g.color, 'fill-opacity': 0.22, stroke: g.color, 'stroke-width': 1.5 }, f.svg);
+        svgEl('line', { x1: cx - w / 2, x2: cx + w / 2, y1: sy(q2), y2: sy(q2), stroke: g.color, 'stroke-width': 3 }, f.svg);
+        bindTip(rect, `<b>${g.label}</b><br>Q1 ${fmt(q1)} · median ${fmt(q2)} · Q3 ${fmt(q3)}<br>min ${fmt(sorted[0])} · max ${fmt(sorted[sorted.length - 1])}`);
+        // Deterministic jitter so the points do not move between redraws.
+        g.values.forEach((v, j) => {
+          const jitter = ((j * 37) % 17 / 17 - 0.5) * w * 0.9;
+          const dot = svgEl('circle', { cx: cx + jitter, cy: sy(v), r: 2.6, fill: g.color, opacity: 0.75 }, f.svg);
+          bindTip(dot, `<b>${g.label}</b><br>${fmt(v)}${options.unit || ''}`);
+        });
+        svgEl('text', { x: cx, y: f.y0 + 18, class: 'axis-text', 'text-anchor': 'middle' }, f.svg).textContent = g.label;
+      });
+    });
+  }
+
+  /** Tiny line without axes, for stat cards. */
+  function spark(container, values, color) {
+    responsive(container, (width) => {
+      const height = container.clientHeight || 40;
+      const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, width, height }, container);
+      const ok = values.filter((v) => v !== null);
+      const min = Math.min(...ok), max = Math.max(...ok);
+      const sx = (i) => i / (values.length - 1) * (width - 4) + 2;
+      const sy = (v) => height - 3 - (v - min) / (max - min || 1) * (height - 6);
+      let d = '';
+      values.forEach((v, i) => { if (v !== null) d += (d ? 'L' : 'M') + sx(i) + ' ' + sy(v); });
+      svgEl('path', { d, fill: 'none', stroke: color, 'stroke-width': 1.8, 'stroke-linejoin': 'round' }, svg);
+    });
+  }
+
+  /** Ring gauge for a value between 0 and 1. */
+  function ring(container, value, color, label) {
+    const size = 96, r = 40, c = 2 * Math.PI * r;
+    const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, width: size, height: size, class: 'ring' }, container);
+    svgEl('circle', { cx: 48, cy: 48, r, fill: 'none', class: 'ring-track', 'stroke-width': 9 }, svg);
+    svgEl('circle', { cx: 48, cy: 48, r, fill: 'none', stroke: color, 'stroke-width': 9, 'stroke-linecap': 'round', 'stroke-dasharray': `${c * value} ${c}`, transform: 'rotate(-90 48 48)' }, svg);
+    const text = svgEl('text', { x: 48, y: 53, 'text-anchor': 'middle', class: 'ring-text' }, svg);
+    text.textContent = label;
+  }
+
+  return { line, histogram, bars, box, spark, ring, fmt };
+})();
+
+/** Shared helpers used by every report layout. */
+const Report = (() => {
+  /** Switch between light and dark theme and remember the choice. */
+  function initTheme() {
+    const root = document.documentElement;
+    let saved = null;
+    try { saved = localStorage.getItem('ammeter-report-theme'); } catch (e) { /* storage may be blocked */ }
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+      button.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('ammeter-report-theme', root.dataset.theme); } catch (e) { /* ignore */ }
+      });
+    });
+  }
+
+  /** Connect every checkbox with data-toggle="id" to the element with that data-chart id. */
+  function initToggles() {
+    document.querySelectorAll('[data-toggle]').forEach((box) => {
+      const apply = () => document.querySelectorAll(`[data-chart="${box.dataset.toggle}"]`).forEach((node) => {
+        node.classList.toggle('is-hidden', !box.checked);
+      });
+      box.addEventListener('change', apply);
+      apply();
+    });
+  }
+
+  /** Ammeters sorted from most to least consistent, by coefficient of variation. Ammeters without a cv are left out. */
+  function ranking(data) {
+    return data.ammeters.filter((a) => a.stats.cv_percent !== null).sort((a, b) => a.stats.cv_percent - b.stats.cv_percent);
+  }
+
+  /** Relative difference between the measured mean and the theoretical mean, in percent. */
+  function accuracyError(meter) {
+    // Without a theoretical mean, or without measurements, there is nothing to compare.
+    if (!meter.expected_mean || meter.stats.mean === null) return null;
+    return (meter.stats.mean - meter.expected_mean) / meter.expected_mean * 100;
+  }
+
+  /** Mean divided by median, above 1.5 means a few large values pull the mean up. */
+  function skew(meter) {
+    return meter.stats.median ? meter.stats.mean / meter.stats.median : null;
+  }
+
+  /** Points for a time series chart. */
+  function points(meter) {
+    return meter.samples.map((s) => ({ x: s.t, y: s.v, label: `#${s.i} · t = ${s.t.toFixed(3)} s` }));
+  }
+
+  /** Every value divided by the mean, so ammeters on different scales can share one chart. */
+  function normalized(meter) {
+    return meter.samples.filter((s) => s.v !== null).map((s) => s.v / meter.stats.mean);
+  }
+
+  /** Short run time like 14:30:05. */
+  function clock(iso) {
+    return iso.slice(11, 19);
+  }
+
+  /** Short date like 22 Nov. */
+  function day(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  /** Sun and moon icons for the theme button. */
+  const themeIcon = `
+    <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>`;
+
+  return { initTheme, initToggles, ranking, accuracyError, skew, points, normalized, clock, day, themeIcon };
+})();
+
+const DATA = {"generated_at": "2026-11-22T18:37:31", "sampling": {"measurements_count": 100, "interval_seconds": 0.02, "frequency_hz": 50.0}, "environment": {"python_version": "3.13.18", "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39", "host": "localhost"}, "ammeters": [{"name": "greenlee", "label": "Greenlee", "color": "#f59e0b", "method": "Ohm's law", "formula": "I = V / R", "range": [0.01, 100.0], "expected_mean": 0.3803068471912087, "port": 40371, "faults": null, "command": "MEASURE_GREENLEE -get_measurement", "run_id": "20261122_183725_2c85842d", "started_at": "2026-11-22T18:37:25", "duration_seconds": 1.9806557109999972, "samples": [{"i": 0, "t": 2.704999985780887e-06, "v": 0.10205909855535861, "err": null}, {"i": 1, "t": 0.02012261199996601, "v": 0.16710427019403226, "err": null}, {"i": 2, "t": 0.04012596199999052, "v": 0.09231081448306266, "err": null}, {"i": 3, "t": 0.060152712999979485, "v": 0.17107929935447302, "err": null}, {"i": 4, "t": 0.08014032099998758, "v": 0.029294867981089632, "err": null}, {"i": 5, "t": 0.10011398500000723, "v": 0.031587193421554416, "err": null}, {"i": 6, "t": 0.12014457099996889, "v": 0.07333196693461828, "err": null}, {"i": 7, "t": 0.14010322000001452, "v": 0.028613895767882955, "err": null}, {"i": 8, "t": 0.16015569199998936, "v": 0.06740918564736921, "err": null}, {"i": 9, "t": 0.18012407200001235, "v": 0.04732063784245324, "err": null}, {"i": 10, "t": 0.20015267200000153, "v": 0.0467121445505753, "err": null}, {"i": 11, "t": 0.2201080589999833, "v": 0.3579502511638109, "err": null}, {"i": 12, "t": 0.2401343429999656, "v": 0.07347459097321785, "err": null}, {"i": 13, "t": 0.2601007469999672, "v": 0.24495519913641634, "err": null}, {"i": 14, "t": 0.28011644599996544, "v": 0.06639850387412094, "err": null}, {"i": 15, "t": 0.30013048500001105, "v": 0.02208871656165781, "err": null}, {"i": 16, "t": 0.3201160979999713, "v": 0.025196381698299082, "err": null}, {"i": 17, "t": 0.34011024699998416, "v": 0.20238794584327358, "err": null}, {"i": 18, "t": 0.36015607899997804, "v": 0.16433731501728172, "err": null}, {"i": 19, "t": 0.3801640909999833, "v": 0.1318692410224665, "err": null}, {"i": 20, "t": 0.40015608699997074, "v": 0.10277662922978062, "err": null}, {"i": 21, "t": 0.4201874020000105, "v": 0.19349550403631144, "err": null}, {"i": 22, "t": 0.44014854799996783, "v": 0.10794301498689664, "err": null}, {"i": 23, "t": 0.4601298110000016, "v": 0.01771326651855509, "err": null}, {"i": 24, "t": 0.4801170640000123, "v": 0.06536396281260184, "err": null}, {"i": 25, "t": 0.5001070799999638, "v": 0.29006777167012704, "err": null}, {"i": 26, "t": 0.5201531559999921, "v": 0.20412988412904182, "err": null}, {"i": 27, "t": 0.540106542999979, "v": 0.10296694335951043, "err": null}, {"i": 28, "t": 0.5600933590000068, "v": 0.12362578187360343, "err": null}, {"i": 29, "t": 0.5801190820000102, "v": 0.11412590334384538, "err": null}, {"i": 30, "t": 0.6001170129999878, "v": 0.20679385301870276, "err": null}, {"i": 31, "t": 0.620193214999972, "v": 0.1226835823839757, "err": null}, {"i": 32, "t": 0.6401246469999933, "v": 0.05366641827273241, "err": null}, {"i": 33, "t": 0.6601338549999696, "v": 0.15493916330622853, "err": null}, {"i": 34, "t": 0.6801335440000003, "v": 0.14967394164986306, "err": null}, {"i": 35, "t": 0.7001053989999946, "v": 0.07716414597914655, "err": null}, {"i": 36, "t": 0.7201360699999668, "v": 0.06367788920218682, "err": null}, {"i": 37, "t": 0.7401124069999696, "v": 0.0625141313378829, "err": null}, {"i": 38, "t": 0.7601363260000085, "v": 0.10236501847064253, "err": null}, {"i": 39, "t": 0.7801300159999869, "v": 0.07910478407115205, "err": null}, {"i": 40, "t": 0.8000885639999638, "v": 0.041534040991507634, "err": null}, {"i": 41, "t": 0.8201024079999684, "v": 0.1779405153559114, "err": null}, {"i": 42, "t": 0.8400988909999683, "v": 0.39425876793784564, "err": null}, {"i": 43, "t": 0.8601404730000013, "v": 0.029202352468406016, "err": null}, {"i": 44, "t": 0.8801169170000094, "v": 0.08533437564708378, "err": null}, {"i": 45, "t": 0.9001036450000015, "v": 0.04890331419709628, "err": null}, {"i": 46, "t": 0.9201945979999664, "v": 0.08970167989023056, "err": null}, {"i": 47, "t": 0.9401903940000125, "v": 0.1840499586925488, "err": null}, {"i": 48, "t": 0.9601950069999816, "v": 0.09988871668573726, "err": null}, {"i": 49, "t": 0.9801566549999734, "v": 0.14874632088955353, "err": null}, {"i": 50, "t": 1.0001947370000153, "v": 0.36356103860582256, "err": null}, {"i": 51, "t": 1.020214139000018, "v": 0.37260894303913933, "err": null}, {"i": 52, "t": 1.0401629890000095, "v": 3.4471056624156673, "err": null}, {"i": 53, "t": 1.060165804999997, "v": 0.2023494632554465, "err": null}, {"i": 54, "t": 1.080208975000005, "v": 0.35421522178241804, "err": null}, {"i": 55, "t": 1.100125692000006, "v": 0.038271470789558865, "err": null}, {"i": 56, "t": 1.1201354209999863, "v": 0.25319825524357886, "err": null}, {"i": 57, "t": 1.1401499819999685, "v": 0.1039835682291433, "err": null}, {"i": 58, "t": 1.1602046719999635, "v": 0.7302028854110356, "err": null}, {"i": 59, "t": 1.1801233030000162, "v": 0.10255736126009615, "err": null}, {"i": 60, "t": 1.200145071999998, "v": 0.4004594216393787, "err": null}, {"i": 61, "t": 1.220107774999974, "v": 0.05757794794678615, "err": null}, {"i": 62, "t": 1.240155996999988, "v": 0.13642514136766226, "err": null}, {"i": 63, "t": 1.2601189339999905, "v": 2.0670057984250976, "err": null}, {"i": 64, "t": 1.2801223820000018, "v": 0.08326360236257074, "err": null}, {"i": 65, "t": 1.300095085999999, "v": 0.39763662207601336, "err": null}, {"i": 66, "t": 1.320159263999983, "v": 0.08536221060662365, "err": null}, {"i": 67, "t": 1.3401000490000001, "v": 0.17673964034603082, "err": null}, {"i": 68, "t": 1.3601141699999744, "v": 0.43779021535615065, "err": null}, {"i": 69, "t": 1.3801373740000145, "v": 0.10078330440441922, "err": null}, {"i": 70, "t": 1.4001543509999692, "v": 0.06216398077427554, "err": null}, {"i": 71, "t": 1.4201228360000187, "v": 0.05912098648687395, "err": null}, {"i": 72, "t": 1.4401133160000086, "v": 0.37392804287316495, "err": null}, {"i": 73, "t": 1.4601137559999984, "v": 0.016572753663352646, "err": null}, {"i": 74, "t": 1.4801902629999972, "v": 0.5061554625450879, "err": null}, {"i": 75, "t": 1.5001053070000125, "v": 0.022635050193057647, "err": null}, {"i": 76, "t": 1.5201240899999675, "v": 0.051059850685085055, "err": null}, {"i": 77, "t": 1.5401270589999854, "v": 0.09312850114598824, "err": null}, {"i": 78, "t": 1.5600950329999819, "v": 0.06131362984867282, "err": null}, {"i": 79, "t": 1.5801043049999635, "v": 0.23856977800482293, "err": null}, {"i": 80, "t": 1.6001181469999892, "v": 0.08008910706773034, "err": null}, {"i": 81, "t": 1.6201702309999746, "v": 0.058759755850015326, "err": null}, {"i": 82, "t": 1.6402128340000104, "v": 0.17988854348657016, "err": null}, {"i": 83, "t": 1.6601396940000086, "v": 0.07309133154914503, "err": null}, {"i": 84, "t": 1.680100450999987, "v": 0.07564779645398102, "err": null}, {"i": 85, "t": 1.7001248440000154, "v": 0.3924239906047558, "err": null}, {"i": 86, "t": 1.720109425999965, "v": 0.1030858318293411, "err": null}, {"i": 87, "t": 1.7401426349999838, "v": 0.12207449396670805, "err": null}, {"i": 88, "t": 1.7601424380000026, "v": 0.04131849045604027, "err": null}, {"i": 89, "t": 1.780110709999974, "v": 0.120156186359791, "err": null}, {"i": 90, "t": 1.8003419409999992, "v": 0.0199300552533667, "err": null}, {"i": 91, "t": 1.8200997280000024, "v": 0.1587551445232561, "err": null}, {"i": 92, "t": 1.8401008029999844, "v": 0.2205786292631837, "err": null}, {"i": 93, "t": 1.8602042109999957, "v": 0.15608973060404183, "err": null}, {"i": 94, "t": 1.8800986850000072, "v": 0.42570724456889186, "err": null}, {"i": 95, "t": 1.9001225929999919, "v": 0.08891493229403184, "err": null}, {"i": 96, "t": 1.9200978949999694, "v": 0.05706268560474254, "err": null}, {"i": 97, "t": 1.940129435000017, "v": 0.0666493234571534, "err": null}, {"i": 98, "t": 1.9601104589999636, "v": 0.13609809377918983, "err": null}, {"i": 99, "t": 1.9802148219999935, "v": 0.5782313451678022, "err": null}], "stats": {"count": 100, "failed_count": 0, "mean": 0.2039013167535448, "median": 0.10287178629464552, "std": 0.4024389274375574, "min_value": 0.016572753663352646, "max_value": 3.4471056624156673, "cv_percent": 197.36945981765516}}, {"name": "entes", "label": "ENTES", "color": "#6366f1", "method": "Hall effect", "formula": "I = B \u00d7 K", "range": [5.0, 200.0], "expected_mean": 68.75, "port": 35003, "faults": null, "command": "MEASURE_ENTES -get_data", "run_id": "20261122_183727_0aed430f", "started_at": "2026-11-22T18:37:27", "duration_seconds": 1.980993237000007, "samples": [{"i": 0, "t": 2.341999959298846e-06, "v": 162.9403627007107, "err": null}, {"i": 1, "t": 0.020103051999967647, "v": 119.16614600281946, "err": null}, {"i": 2, "t": 0.040145685999959824, "v": 103.76023283109178, "err": null}, {"i": 3, "t": 0.06025442399999292, "v": 71.58543856695927, "err": null}, {"i": 4, "t": 0.08010820599997714, "v": 86.10909249971958, "err": null}, {"i": 5, "t": 0.10017812499995671, "v": 20.977290652810584, "err": null}, {"i": 6, "t": 0.12016026199995622, "v": 131.62007463701687, "err": null}, {"i": 7, "t": 0.14011613299999226, "v": 64.88020320948823, "err": null}, {"i": 8, "t": 0.16016182799995704, "v": 60.23772363470321, "err": null}, {"i": 9, "t": 0.18011003199995912, "v": 33.42772436457792, "err": null}, {"i": 10, "t": 0.20014430999998467, "v": 51.527826854352604, "err": null}, {"i": 11, "t": 0.22016637899997704, "v": 49.15780259569413, "err": null}, {"i": 12, "t": 0.24011656900000844, "v": 70.35687579834601, "err": null}, {"i": 13, "t": 0.2601061039999877, "v": 14.377062490494126, "err": null}, {"i": 14, "t": 0.280114760999993, "v": 131.1659482027039, "err": null}, {"i": 15, "t": 0.30013833499998555, "v": 148.65904757657447, "err": null}, {"i": 16, "t": 0.3201903599999696, "v": 29.095720724989487, "err": null}, {"i": 17, "t": 0.3401189389999786, "v": 26.30328062155525, "err": null}, {"i": 18, "t": 0.36019298899998375, "v": 75.59954424149342, "err": null}, {"i": 19, "t": 0.38011503699999594, "v": 83.60858054202842, "err": null}, {"i": 20, "t": 0.40013049099997033, "v": 167.45649090077538, "err": null}, {"i": 21, "t": 0.4201454619999936, "v": 36.217770005228104, "err": null}, {"i": 22, "t": 0.44012853999998924, "v": 14.032163342237965, "err": null}, {"i": 23, "t": 0.460138110999992, "v": 22.7533652516034, "err": null}, {"i": 24, "t": 0.48014018099996747, "v": 26.162205762780722, "err": null}, {"i": 25, "t": 0.5001073749999705, "v": 70.34574107221819, "err": null}, {"i": 26, "t": 0.5201444989999686, "v": 19.760205238407405, "err": null}, {"i": 27, "t": 0.5401281139999696, "v": 75.48512817894171, "err": null}, {"i": 28, "t": 0.5601243149999959, "v": 128.74244932930148, "err": null}, {"i": 29, "t": 0.580138743999953, "v": 122.99210995240024, "err": null}, {"i": 30, "t": 0.600122392000003, "v": 16.4178423801204, "err": null}, {"i": 31, "t": 0.6201316279999673, "v": 72.02948318804633, "err": null}, {"i": 32, "t": 0.6401269369999909, "v": 92.30760167077132, "err": null}, {"i": 33, "t": 0.6601290959999915, "v": 62.61320195446216, "err": null}, {"i": 34, "t": 0.6801408270000024, "v": 42.83071434531263, "err": null}, {"i": 35, "t": 0.7001702590000036, "v": 75.56001666530462, "err": null}, {"i": 36, "t": 0.720139875999962, "v": 37.81627955220463, "err": null}, {"i": 37, "t": 0.7402282029999583, "v": 135.76257103121696, "err": null}, {"i": 38, "t": 0.7601496549999638, "v": 119.29801665906145, "err": null}, {"i": 39, "t": 0.7801125489999663, "v": 37.79399488518187, "err": null}, {"i": 40, "t": 0.8001486829999749, "v": 126.97844698171946, "err": null}, {"i": 41, "t": 0.8201212159999614, "v": 106.83970165592072, "err": null}, {"i": 42, "t": 0.8401645539999549, "v": 75.16016379456462, "err": null}, {"i": 43, "t": 0.860174446999963, "v": 85.94802432061859, "err": null}, {"i": 44, "t": 0.8801323060000072, "v": 23.05902413163141, "err": null}, {"i": 45, "t": 0.9001063799999542, "v": 102.68539937712256, "err": null}, {"i": 46, "t": 0.9202013940000029, "v": 22.32858329235289, "err": null}, {"i": 47, "t": 0.9401607739999918, "v": 175.6545340936785, "err": null}, {"i": 48, "t": 0.9601674999999545, "v": 95.48370894847929, "err": null}, {"i": 49, "t": 0.9801928750000002, "v": 61.27596841997981, "err": null}, {"i": 50, "t": 1.0001912230000016, "v": 23.279452670196118, "err": null}, {"i": 51, "t": 1.020105583999964, "v": 116.43812993847148, "err": null}, {"i": 52, "t": 1.0401563439999677, "v": 36.394745016832466, "err": null}, {"i": 53, "t": 1.0602103249999573, "v": 39.10566284094195, "err": null}, {"i": 54, "t": 1.080138863000002, "v": 115.90023571513375, "err": null}, {"i": 55, "t": 1.1001256099999637, "v": 72.60563801329505, "err": null}, {"i": 56, "t": 1.1201489329999958, "v": 65.53343891749371, "err": null}, {"i": 57, "t": 1.1401378669999644, "v": 41.951618826936844, "err": null}, {"i": 58, "t": 1.1601451909999696, "v": 79.74067859556065, "err": null}, {"i": 59, "t": 1.1801514239999733, "v": 53.239854094413616, "err": null}, {"i": 60, "t": 1.200135161999981, "v": 20.712851789184764, "err": null}, {"i": 61, "t": 1.2201229049999824, "v": 36.671708213928774, "err": null}, {"i": 62, "t": 1.2401330769999959, "v": 78.88620500081676, "err": null}, {"i": 63, "t": 1.2601192199999787, "v": 15.704465468251103, "err": null}, {"i": 64, "t": 1.2801487319999865, "v": 29.73960837164447, "err": null}, {"i": 65, "t": 1.3001703360000079, "v": 118.17517107256927, "err": null}, {"i": 66, "t": 1.320161561999953, "v": 34.130779329266886, "err": null}, {"i": 67, "t": 1.3401144849999582, "v": 16.373670016432612, "err": null}, {"i": 68, "t": 1.3600999589999674, "v": 62.16253514945322, "err": null}, {"i": 69, "t": 1.3801117059999797, "v": 15.98399366202693, "err": null}, {"i": 70, "t": 1.4001421469999968, "v": 131.26683185947252, "err": null}, {"i": 71, "t": 1.4201380599999993, "v": 83.44546853185541, "err": null}, {"i": 72, "t": 1.4401466479999954, "v": 146.16220783171602, "err": null}, {"i": 73, "t": 1.4601150560000065, "v": 186.0938276724991, "err": null}, {"i": 74, "t": 1.4801266199999645, "v": 160.40668593852266, "err": null}, {"i": 75, "t": 1.5001322079999682, "v": 67.60175633237003, "err": null}, {"i": 76, "t": 1.5201393649999773, "v": 47.71741759402535, "err": null}, {"i": 77, "t": 1.5401141959999904, "v": 33.717249488237265, "err": null}, {"i": 78, "t": 1.560197020999965, "v": 101.07313579548685, "err": null}, {"i": 79, "t": 1.5801037439999845, "v": 30.057662069166494, "err": null}, {"i": 80, "t": 1.600131723000004, "v": 35.12295977228495, "err": null}, {"i": 81, "t": 1.6201699220000023, "v": 19.374115247070247, "err": null}, {"i": 82, "t": 1.640194079999958, "v": 17.191929592852894, "err": null}, {"i": 83, "t": 1.6672986119999678, "v": 36.561771842545134, "err": null}, {"i": 84, "t": 1.6801733929999614, "v": 23.94037350622703, "err": null}, {"i": 85, "t": 1.7001756930000056, "v": 71.8552066455019, "err": null}, {"i": 86, "t": 1.7201673229999983, "v": 79.54256663243825, "err": null}, {"i": 87, "t": 1.740163205999977, "v": 24.872275992989948, "err": null}, {"i": 88, "t": 1.760194743999989, "v": 84.6436789934715, "err": null}, {"i": 89, "t": 1.7801102340000057, "v": 158.74112617428446, "err": null}, {"i": 90, "t": 1.8001845210000056, "v": 59.29714899882644, "err": null}, {"i": 91, "t": 1.8201329839999971, "v": 38.95959774253677, "err": null}, {"i": 92, "t": 1.8401671449999526, "v": 20.923625130436683, "err": null}, {"i": 93, "t": 1.8601855289999776, "v": 37.92844595676343, "err": null}, {"i": 94, "t": 1.880125932999988, "v": 85.23705776491924, "err": null}, {"i": 95, "t": 1.9001324719999957, "v": 154.30200679395253, "err": null}, {"i": 96, "t": 1.9201291690000062, "v": 64.98847524663155, "err": null}, {"i": 97, "t": 1.940165181999987, "v": 21.223594584874082, "err": null}, {"i": 98, "t": 1.960154298999953, "v": 28.654740199435402, "err": null}, {"i": 99, "t": 1.9801194639999835, "v": 26.231109224030526, "err": null}], "stats": {"count": 100, "failed_count": 0, "mean": 69.3621137698805, "median": 63.7467025819752, "std": 45.036484412794415, "min_value": 14.032163342237965, "max_value": 186.0938276724991, "cv_percent": 64.92951550209368}}, {"name": "circutor", "label": "CIRCUTOR", "color": "#10b981", "method": "Rogowski coil", "formula": "I = \u03a3 V\u00b7dt", "range": [0.001, 0.1], "expected_mean": 0.03025, "port": 36075, "faults": null, "command": "MEASURE_CIRCUTOR -get_measurement", "run_id": "20261122_183729_e970f903", "started_at": "2026-11-22T18:37:29", "duration_seconds": 1.9806891509999787, "samples": [{"i": 0, "t": 2.2849999936624954e-06, "v": 0.014212786369537947, "err": null}, {"i": 1, "t": 0.020127813999977207, "v": 0.026318659799248745, "err": null}, {"i": 2, "t": 0.04014388100000588, "v": 0.047528764956977526, "err": null}, {"i": 3, "t": 0.060175056999980825, "v": 0.02167721976213345, "err": null}, {"i": 4, "t": 0.0801259449999634, "v": 0.018808095371456245, "err": null}, {"i": 5, "t": 0.10011091899997382, "v": 0.036466603559541934, "err": null}, {"i": 6, "t": 0.12010329899999306, "v": 0.009066215116055817, "err": null}, {"i": 7, "t": 0.14012076599999546, "v": 0.03939189618894791, "err": null}, {"i": 8, "t": 0.1601265449999687, "v": 0.05358935865959205, "err": null}, {"i": 9, "t": 0.18016227900000104, "v": 0.017309879860469016, "err": null}, {"i": 10, "t": 0.20011944399999493, "v": 0.013497870324558563, "err": null}, {"i": 11, "t": 0.22010738699998456, "v": 0.0105840819628252, "err": null}, {"i": 12, "t": 0.24011177799997085, "v": 0.021908713141185594, "err": null}, {"i": 13, "t": 0.2601220139999896, "v": 0.03880701548790719, "err": null}, {"i": 14, "t": 0.2801795889999994, "v": 0.04498142795724417, "err": null}, {"i": 15, "t": 0.3001289819999897, "v": 0.030993386349930263, "err": null}, {"i": 16, "t": 0.32011954199998627, "v": 0.03906504782064283, "err": null}, {"i": 17, "t": 0.3401707310000006, "v": 0.020387038611728, "err": null}, {"i": 18, "t": 0.36011287700000594, "v": 0.03366474034465297, "err": null}, {"i": 19, "t": 0.38011491800000385, "v": 0.012147037330660101, "err": null}, {"i": 20, "t": 0.4001515989999689, "v": 0.02410563195781289, "err": null}, {"i": 21, "t": 0.4201080579999825, "v": 0.05348530686880114, "err": null}, {"i": 22, "t": 0.44013040199996567, "v": 0.049994877436695125, "err": null}, {"i": 23, "t": 0.460119356000007, "v": 0.024059724563875794, "err": null}, {"i": 24, "t": 0.4801270499999646, "v": 0.027442243154703432, "err": null}, {"i": 25, "t": 0.5001289260000021, "v": 0.04043369268697471, "err": null}, {"i": 26, "t": 0.5201707049999982, "v": 0.018840807336287627, "err": null}, {"i": 27, "t": 0.5401221060000125, "v": 0.03767637365484, "err": null}, {"i": 28, "t": 0.5601373220000028, "v": 0.02472151343494663, "err": null}, {"i": 29, "t": 0.5801311299999838, "v": 0.013145955268509335, "err": null}, {"i": 30, "t": 0.6001176269999746, "v": 0.046978092427717874, "err": null}, {"i": 31, "t": 0.6201560619999782, "v": 0.03576838637277753, "err": null}, {"i": 32, "t": 0.6401032519999603, "v": 0.03140239318273598, "err": null}, {"i": 33, "t": 0.6601106179999761, "v": 0.02324883884992922, "err": null}, {"i": 34, "t": 0.68011291199997, "v": 0.05360965738800466, "err": null}, {"i": 35, "t": 0.7000989539999978, "v": 0.04376733465372147, "err": null}, {"i": 36, "t": 0.720128974999966, "v": 0.04578864321707573, "err": null}, {"i": 37, "t": 0.7401114589999906, "v": 0.014208795661779978, "err": null}, {"i": 38, "t": 0.7601259159999927, "v": 0.04531151996831049, "err": null}, {"i": 39, "t": 0.7801660590000097, "v": 0.04122670971064313, "err": null}, {"i": 40, "t": 0.8001555129999929, "v": 0.045691721287335625, "err": null}, {"i": 41, "t": 0.8201419359999704, "v": 0.01859981730299888, "err": null}, {"i": 42, "t": 0.8401587600000084, "v": 0.04282592755821969, "err": null}, {"i": 43, "t": 0.8601345490000085, "v": 0.06793131057443022, "err": null}, {"i": 44, "t": 0.880140444999995, "v": 0.045656617188504695, "err": null}, {"i": 45, "t": 0.9001161900000056, "v": 0.008895914740744054, "err": null}, {"i": 46, "t": 0.9201458129999764, "v": 0.04371323416617575, "err": null}, {"i": 47, "t": 0.9401276049999865, "v": 0.03985783092644642, "err": null}, {"i": 48, "t": 0.9600961919999804, "v": 0.0346059831661009, "err": null}, {"i": 49, "t": 0.9824506900000074, "v": 0.02455242918531441, "err": null}, {"i": 50, "t": 1.000172541999973, "v": 0.03435754045242077, "err": null}, {"i": 51, "t": 1.020165148999979, "v": 0.037569891266331916, "err": null}, {"i": 52, "t": 1.0401627189999658, "v": 0.038865673997398806, "err": null}, {"i": 53, "t": 1.060109630999989, "v": 0.01984913435930652, "err": null}, {"i": 54, "t": 1.0801646659999733, "v": 0.012768435033503407, "err": null}, {"i": 55, "t": 1.1001470659999768, "v": 0.03788232598549612, "err": null}, {"i": 56, "t": 1.120143688999974, "v": 0.01629456466070269, "err": null}, {"i": 57, "t": 1.1401184089999674, "v": 0.0429758546887401, "err": null}, {"i": 58, "t": 1.1601072199999862, "v": 0.020472357176785333, "err": null}, {"i": 59, "t": 1.1801871010000013, "v": 0.03525622779251004, "err": null}, {"i": 60, "t": 1.2001190599999632, "v": 0.006301452028079641, "err": null}, {"i": 61, "t": 1.2201853439999581, "v": 0.0564947356543131, "err": null}, {"i": 62, "t": 1.2401495039999872, "v": 0.04358117526926117, "err": null}, {"i": 63, "t": 1.2601748879999946, "v": 0.02491552589774422, "err": null}, {"i": 64, "t": 1.28019455499998, "v": 0.027187577007957715, "err": null}, {"i": 65, "t": 1.3001278109999816, "v": 0.025155939749321087, "err": null}, {"i": 66, "t": 1.3201365219999843, "v": 0.05510958941628736, "err": null}, {"i": 67, "t": 1.3401204819999748, "v": 0.024885509671620974, "err": null}, {"i": 68, "t": 1.360137877999989, "v": 0.0525147037225578, "err": null}, {"i": 69, "t": 1.3802278659999843, "v": 0.026499802776529, "err": null}, {"i": 70, "t": 1.4001777489999654, "v": 0.015906910085091295, "err": null}, {"i": 71, "t": 1.4201617479999982, "v": 0.028284993265192016, "err": null}, {"i": 72, "t": 1.4401659019999897, "v": 0.008694583946733976, "err": null}, {"i": 73, "t": 1.4601620589999698, "v": 0.020305567214862572, "err": null}, {"i": 74, "t": 1.480178837999972, "v": 0.02349112213940948, "err": null}, {"i": 75, "t": 1.5001890679999974, "v": 0.03151891541465093, "err": null}, {"i": 76, "t": 1.520211794999966, "v": 0.026683725719887762, "err": null}, {"i": 77, "t": 1.5401254579999772, "v": 0.006176171387334677, "err": null}, {"i": 78, "t": 1.5601240679999933, "v": 0.01612663536055039, "err": null}, {"i": 79, "t": 1.580120595999972, "v": 0.03864801974436911, "err": null}, {"i": 80, "t": 1.600129484999968, "v": 0.05667613094729607, "err": null}, {"i": 81, "t": 1.620210075999978, "v": 0.044262459152730506, "err": null}, {"i": 82, "t": 1.640189754000005, "v": 0.013474102382593058, "err": null}, {"i": 83, "t": 1.6602091219999693, "v": 0.022696515440401625, "err": null}, {"i": 84, "t": 1.6801737709999998, "v": 0.05588534815112785, "err": null}, {"i": 85, "t": 1.7001088359999699, "v": 0.009395566417148483, "err": null}, {"i": 86, "t": 1.7201136169999813, "v": 0.018004523296294577, "err": null}, {"i": 87, "t": 1.7401665989999628, "v": 0.012305603428362453, "err": null}, {"i": 88, "t": 1.7601301479999734, "v": 0.035264947039358334, "err": null}, {"i": 89, "t": 1.7801507909999827, "v": 0.01768991224104626, "err": null}, {"i": 90, "t": 1.8001500940000028, "v": 0.00988939509625957, "err": null}, {"i": 91, "t": 1.8201460319999683, "v": 0.027966161385067932, "err": null}, {"i": 92, "t": 1.8401215289999868, "v": 0.02492857131939499, "err": null}, {"i": 93, "t": 1.8601242149999848, "v": 0.009618223862066818, "err": null}, {"i": 94, "t": 1.8801062339999817, "v": 0.017637120161430087, "err": null}, {"i": 95, "t": 1.9001764049999679, "v": 0.054178999256784585, "err": null}, {"i": 96, "t": 1.9201249490000123, "v": 0.032217515764771304, "err": null}, {"i": 97, "t": 1.9401297590000013, "v": 0.04138303707218774, "err": null}, {"i": 98, "t": 1.9601272950000066, "v": 0.04161319251928613, "err": null}, {"i": 99, "t": 1.9801110479999693, "v": 0.034982536288191694, "err": null}], "stats": {"count": 100, "failed_count": 0, "mean": 0.03052797644974459, "median": 0.028125577325129974, "std": 0.014364202527208504, "min_value": 0.006176171387334677, "max_value": 0.06793131057443022, "cv_percent": 47.052586504889945}}], "history": {"greenlee": [{"run_id": "20261122_183215_1cfe6b75", "started_at": "2026-11-22T18:32:15", "mean": 0.3777614070326779, "median": 0.1217328039334418, "cv_percent": 364.9846903503868, "failed_count": 0}, {"run_id": "20261122_183445_a28bb67c", "started_at": "2026-11-22T18:34:45", "mean": 0.31124388366893524, "median": 0.1289134922333665, "cv_percent": 249.7038713575544, "failed_count": 2}], "entes": [{"run_id": "20261122_183305_87d00097", "started_at": "2026-11-22T18:33:05", "mean": 59.968873749977966, "median": 52.93652793984244, "cv_percent": 65.35017697038155, "failed_count": 0}, {"run_id": "20261122_183534_028342b3", "started_at": "2026-11-22T18:35:34", "mean": 239.29446909313077, "median": 61.62756649638434, "cv_percent": 386.0177381830361, "failed_count": 5}], "circutor": [{"run_id": "20261122_183354_f050dca8", "started_at": "2026-11-22T18:33:54", "mean": 0.03219807615742002, "median": 0.03174257809916823, "cv_percent": 46.491163110162184, "failed_count": 0}, {"run_id": "20261122_183624_8d36b3e8", "started_at": "2026-11-22T18:36:24", "mean": 0.029235231768251678, "median": 0.029005821407405305, "cv_percent": 53.72126874868557, "failed_count": 4}]}, "measurement_error": null, "tests": {"started_at": "2026-11-22T18:37:15", "duration_seconds": 10.029225491999966, "exit_status": 0, "command": "pytest -v -p no:cacheprovider --report --report-dir results/reports", "python_version": "3.13.18", "pytest_version": "9.1.1", "totals": {"passed": 118, "failed": 0, "error": 0, "skipped": 0, "xfailed": 0, "xpassed": 0, "not run": 0, "total": 118}, "tests": [{"nodeid": "tests/test_analysis.py::TestAnalyzeSamples::test_basic_statistics", "file": "tests/test_analysis.py", "cls": "TestAnalyzeSamples", "name": "test_basic_statistics", "doc": "Known input gives the statistics we calculated by hand.", "markers": ["analysis", "unit"], "outcome": "passed", "duration": 0.0010634840000420809, "message": ""}, {"nodeid": "tests/test_analysis.py::TestAnalyzeSamples::test_failed_samples_are_excluded", "file": "tests/test_analysis.py", "cls": "TestAnalyzeSamples", "name": "test_failed_samples_are_excluded", "doc": "Failed samples are counted but not used in the calculation.", "markers": ["analysis", "unit"], "outcome": "passed", "duration": 0.0004609390000496205, "message": ""}, {"nodeid": "tests/test_analysis.py::TestAnalyzeSamples::test_even_count_median_is_average_of_middle_values", "file": "tests/test_analysis.py", "cls": "TestAnalyzeSamples", "name": "test_even_count_median_is_average_of_middle_values", "doc": "With an even number of values the median is the mean of the two middle ones.", "markers": ["analysis", "unit"], "outcome": "passed", "duration": 0.00037244099996769364, "message": ""}, {"nodeid": "tests/test_analysis.py::TestAnalyzeSamples::test_single_value_has_zero_std", "file": "tests/test_analysis.py", "cls": "TestAnalyzeSamples", "name": "test_single_value_has_zero_std", "doc": "One value has no spread, so std is zero instead of raising an error.", "markers": ["analysis", "unit"], "outcome": "passed", "duration": 0.0003896959999565297, "message": ""}, {"nodeid": "tests/test_analysis.py::TestAnalyzeSamples::test_all_failed_returns_empty_statistics", "file": "tests/test_analysis.py", "cls": "TestAnalyzeSamples", "name": "test_all_failed_returns_empty_statistics", "doc": "When every sample failed there are no numbers, only the failure count.", "markers": ["analysis", "unit"], "outcome": "passed", "duration": 0.0005157040000085544, "message": ""}, {"nodeid": "tests/test_analysis.py::TestAnalyzeSamples::test_empty_list", "file": "tests/test_analysis.py", "cls": "TestAnalyzeSamples", "name": "test_empty_list", "doc": "An empty list is handled like a run with no successful samples.", "markers": ["analysis", "unit"], "outcome": "passed", "duration": 0.00037683900001184156, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientSuccess::test_returns_the_reply_as_float", "file": "tests/test_client.py", "cls": "TestAmmeterClientSuccess", "name": "test_returns_the_reply_as_float", "doc": "The number sent by the server comes back as a float.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.10194205499993814, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientSuccess::test_sends_the_exact_command", "file": "tests/test_client.py", "cls": "TestAmmeterClientSuccess", "name": "test_sends_the_exact_command", "doc": "The server receives exactly the command the client was created with.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.10187372600000799, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientSuccess::test_every_request_is_a_new_connection", "file": "tests/test_client.py", "cls": "TestAmmeterClientSuccess", "name": "test_every_request_is_a_new_connection", "doc": "The same client can be used many times, each request opens its own connection.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.10210939700004928, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_no_server_raises_connection_error", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_no_server_raises_connection_error", "doc": "Nothing listens on the port, so the connection is refused.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.0007611299999439325, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_original_error_is_kept_as_cause", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_original_error_is_kept_as_cause", "doc": "The socket error is kept as the cause, so the traceback still shows what really happened.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.00033571200009419044, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_slow_server_raises_connection_error_after_timeout", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_slow_server_raises_connection_error_after_timeout", "doc": "A server that answers too late does not make the client wait forever.", "markers": ["client", "network"], "outcome": "passed", "duration": 1.0014193029999774, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_no_reply_raises_response_error", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_no_reply_raises_response_error", "doc": "The server closes the connection without data, like an emulator that got a wrong command.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.10168569799998295, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_text_reply_raises_invalid_reply_error", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_text_reply_raises_invalid_reply_error", "doc": "A reply that is not a number raises an error that shows the reply.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.10161653799991655, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_all_errors_share_the_base_class[AmmeterConnectionError]", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_all_errors_share_the_base_class[AmmeterConnectionError]", "doc": "Catching AmmeterError catches every ammeter failure, which the sampler relies on.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.0005452839999975367, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_all_errors_share_the_base_class[AmmeterResponseError]", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_all_errors_share_the_base_class[AmmeterResponseError]", "doc": "Catching AmmeterError catches every ammeter failure, which the sampler relies on.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.00034135100003140906, "message": ""}, {"nodeid": "tests/test_client.py::TestAmmeterClientErrors::test_all_errors_share_the_base_class[AmmeterInvalidReplyError]", "file": "tests/test_client.py", "cls": "TestAmmeterClientErrors", "name": "test_all_errors_share_the_base_class[AmmeterInvalidReplyError]", "doc": "Catching AmmeterError catches every ammeter failure, which the sampler relies on.", "markers": ["client", "network"], "outcome": "passed", "duration": 0.00032519500007310853, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorFormulas::test_greenlee_uses_ohms_law", "file": "tests/test_emulators.py", "cls": "TestEmulatorFormulas", "name": "test_greenlee_uses_ohms_law", "doc": "I = V / R with V = 5 V and R = 2 ohm gives 2.5 A.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.00041426299998192917, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorFormulas::test_entes_uses_hall_effect", "file": "tests/test_emulators.py", "cls": "TestEmulatorFormulas", "name": "test_entes_uses_hall_effect", "doc": "I = B * K with B = 0.05 T and K = 1000 gives 50 A.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0003330769999934091, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorFormulas::test_circutor_integrates_voltage_over_time", "file": "tests/test_emulators.py", "cls": "TestEmulatorFormulas", "name": "test_circutor_integrates_voltage_over_time", "doc": "I = sum(V * dt) with dt = 0.005 s and ten samples of 0.5 V gives 10 * 0.5 * 0.005 = 0.025 A.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.00031254399999625093, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorRanges::test_values_stay_in_range[greenlee]", "file": "tests/test_emulators.py", "cls": "TestEmulatorRanges", "name": "test_values_stay_in_range[greenlee]", "doc": "Many random measurements, none of them outside the possible range.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0007114320000027874, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorRanges::test_values_stay_in_range[entes]", "file": "tests/test_emulators.py", "cls": "TestEmulatorRanges", "name": "test_values_stay_in_range[entes]", "doc": "Many random measurements, none of them outside the possible range.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0007006810000120822, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorRanges::test_values_stay_in_range[circutor]", "file": "tests/test_emulators.py", "cls": "TestEmulatorRanges", "name": "test_values_stay_in_range[circutor]", "doc": "Many random measurements, none of them outside the possible range.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0018282320000935215, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorRanges::test_values_are_random[greenlee]", "file": "tests/test_emulators.py", "cls": "TestEmulatorRanges", "name": "test_values_are_random[greenlee]", "doc": "The emulator does not return the same value every time.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0004350590000399279, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorRanges::test_values_are_random[entes]", "file": "tests/test_emulators.py", "cls": "TestEmulatorRanges", "name": "test_values_are_random[entes]", "doc": "The emulator does not return the same value every time.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0005735819999586056, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorRanges::test_values_are_random[circutor]", "file": "tests/test_emulators.py", "cls": "TestEmulatorRanges", "name": "test_values_are_random[circutor]", "doc": "The emulator does not return the same value every time.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.00047017100001767176, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorCommands::test_command_matches_readme[greenlee]", "file": "tests/test_emulators.py", "cls": "TestEmulatorCommands", "name": "test_command_matches_readme[greenlee]", "doc": "The command in the code is byte for byte the command in the README.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0003701059999912104, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorCommands::test_command_matches_readme[entes]", "file": "tests/test_emulators.py", "cls": "TestEmulatorCommands", "name": "test_command_matches_readme[entes]", "doc": "The command in the code is byte for byte the command in the README.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.0003223109999908047, "message": ""}, {"nodeid": "tests/test_emulators.py::TestEmulatorCommands::test_command_matches_readme[circutor]", "file": "tests/test_emulators.py", "cls": "TestEmulatorCommands", "name": "test_command_matches_readme[circutor]", "doc": "The command in the code is byte for byte the command in the README.", "markers": ["emulators", "unit"], "outcome": "passed", "duration": 0.00041150000004108733, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultProfile::test_invalid_settings_are_rejected[settings0-between 0 and 1]", "file": "tests/test_fault_injection.py", "cls": "TestFaultProfile", "name": "test_invalid_settings_are_rejected[settings0-between 0 and 1]", "doc": "A setting that cannot be right stops the run with a clear error.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0006074369999851115, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultProfile::test_invalid_settings_are_rejected[settings1-between 0 and 1]", "file": "tests/test_fault_injection.py", "cls": "TestFaultProfile", "name": "test_invalid_settings_are_rejected[settings1-between 0 and 1]", "doc": "A setting that cannot be right stops the run with a clear error.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0005656320000184678, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultProfile::test_invalid_settings_are_rejected[settings2-add up to 1.20]", "file": "tests/test_fault_injection.py", "cls": "TestFaultProfile", "name": "test_invalid_settings_are_rejected[settings2-add up to 1.20]", "doc": "A setting that cannot be right stops the run with a clear error.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0004937269999913951, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultProfile::test_invalid_settings_are_rejected[settings3-must be positive]", "file": "tests/test_fault_injection.py", "cls": "TestFaultProfile", "name": "test_invalid_settings_are_rejected[settings3-must be positive]", "doc": "A setting that cannot be right stops the run with a clear error.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.000477639999985513, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultProfile::test_invalid_settings_are_rejected[settings4-Unknown error simulation settings]", "file": "tests/test_fault_injection.py", "cls": "TestFaultProfile", "name": "test_invalid_settings_are_rejected[settings4-Unknown error simulation settings]", "doc": "A setting that cannot be right stops the run with a clear error.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0005587150000110341, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultProfile::test_shared_defaults_and_own_settings", "file": "tests/test_fault_injection.py", "cls": "TestFaultProfile", "name": "test_shared_defaults_and_own_settings", "doc": "delay_seconds and spike_factor are shared, but one ammeter can override them.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.00024075900006437223, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultInjector::test_no_faults_by_default", "file": "tests/test_fault_injection.py", "cls": "TestFaultInjector", "name": "test_no_faults_by_default", "doc": "A profile without probabilities never misbehaves.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0007206409999298558, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultInjector::test_frequencies_follow_the_probabilities", "file": "tests/test_fault_injection.py", "cls": "TestFaultInjector", "name": "test_frequencies_follow_the_probabilities", "doc": "Over many requests every fault happens about as often as configured.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.00968804300003967, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultInjector::test_same_seed_same_faults", "file": "tests/test_fault_injection.py", "cls": "TestFaultInjector", "name": "test_same_seed_same_faults", "doc": "A fixed seed repeats exactly the same faults, so a failing run can be reproduced.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0004048449999345394, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestBuildInjectors::test_disabled_simulation_builds_nothing", "file": "tests/test_fault_injection.py", "cls": "TestBuildInjectors", "name": "test_disabled_simulation_builds_nothing", "doc": "enabled: false keeps every emulator healthy, whatever the profiles say.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.00022093600000516744, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestBuildInjectors::test_only_listed_ammeters_get_faults", "file": "tests/test_fault_injection.py", "cls": "TestBuildInjectors", "name": "test_only_listed_ammeters_get_faults", "doc": "An ammeter left out of the section stays healthy.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0003077360000816043, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestBuildInjectors::test_unknown_ammeter_is_rejected", "file": "tests/test_fault_injection.py", "cls": "TestBuildInjectors", "name": "test_unknown_ammeter_is_rejected", "doc": "A typo in an ammeter name is reported instead of silently simulating nothing.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.0003929569999741034, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultyEmulator::test_no_reply", "file": "tests/test_fault_injection.py", "cls": "TestFaultyEmulator", "name": "test_no_reply", "doc": "The emulator closes without answering, the client reports it as a missing reply.", "markers": ["faults", "network"], "outcome": "passed", "duration": 0.003778472000021793, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultyEmulator::test_invalid_reply", "file": "tests/test_fault_injection.py", "cls": "TestFaultyEmulator", "name": "test_invalid_reply", "doc": "The emulator answers text, the client reports the text it got.", "markers": ["faults", "network"], "outcome": "passed", "duration": 0.0016634459999522733, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultyEmulator::test_spike", "file": "tests/test_fault_injection.py", "cls": "TestFaultyEmulator", "name": "test_spike", "doc": "The emulator answers the real value times the spike factor, a number that looks valid.", "markers": ["faults", "network"], "outcome": "passed", "duration": 0.0013444959999446837, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultyEmulator::test_delay_longer_than_timeout_fails_and_server_survives", "file": "tests/test_fault_injection.py", "cls": "TestFaultyEmulator", "name": "test_delay_longer_than_timeout_fails_and_server_survives", "doc": "A late answer makes the client give up, and the emulator keeps serving the next requests.", "markers": ["faults", "network"], "outcome": "passed", "duration": 0.8025409279999849, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFaultyEmulator::test_server_survives_a_connection_reset", "file": "tests/test_fault_injection.py", "cls": "TestFaultyEmulator", "name": "test_server_survives_a_connection_reset", "doc": "A client that resets the connection before the answer used to stop the emulator thread for good.", "markers": ["faults", "network"], "outcome": "passed", "duration": 0.5024416660000384, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFrameworkWithFaults::test_failures_are_recorded_and_the_run_goes_on", "file": "tests/test_fault_injection.py", "cls": "TestFrameworkWithFaults", "name": "test_failures_are_recorded_and_the_run_goes_on", "doc": "Half of the samples fail, every sample is still taken, and the run says the failures were simulated.", "markers": ["faults", "integration", "network"], "outcome": "passed", "duration": 0.5044292899999618, "message": ""}, {"nodeid": "tests/test_fault_injection.py::TestFrameworkWithFaults::test_healthy_run_has_no_simulation_in_metadata", "file": "tests/test_fault_injection.py", "cls": "TestFrameworkWithFaults", "name": "test_healthy_run_has_no_simulation_in_metadata", "doc": "Without the simulation the metadata says so, so a reader knows the failures were real.", "markers": ["faults", "integration", "network"], "outcome": "passed", "duration": 0.5847779039999068, "message": ""}, {"nodeid": "tests/test_fault_injection.py::test_every_fault_type_is_documented", "file": "tests/test_fault_injection.py", "cls": "", "name": "test_every_fault_type_is_documented", "doc": "The four fault types in the code are the four documented in config.yaml and the README.", "markers": ["faults", "unit"], "outcome": "passed", "duration": 0.000312925000002906, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_every_sample_succeeds[greenlee]", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_every_sample_succeeds[greenlee]", "doc": "All planned samples are taken and none of them fails.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08422009499997785, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_every_sample_succeeds[entes]", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_every_sample_succeeds[entes]", "doc": "All planned samples are taken and none of them fails.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08498164299999189, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_every_sample_succeeds[circutor]", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_every_sample_succeeds[circutor]", "doc": "All planned samples are taken and none of them fails.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08520750999997517, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_values_stay_in_range[greenlee]", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_values_stay_in_range[greenlee]", "doc": "Values that went through the network are still inside the range of the ammeter.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08364152199993669, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_values_stay_in_range[entes]", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_values_stay_in_range[entes]", "doc": "Values that went through the network are still inside the range of the ammeter.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08540950600001906, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_values_stay_in_range[circutor]", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_values_stay_in_range[circutor]", "doc": "Values that went through the network are still inside the range of the ammeter.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.092807042000004, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_result_contains_id_and_metadata", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_result_contains_id_and_metadata", "doc": "The result carries a run id and the details needed to understand the run later.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08540035599997964, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_two_runs_get_different_ids", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_two_runs_get_different_ids", "doc": "Each run is identified on its own, even for the same ammeter.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.1645048480000355, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_unknown_ammeter_raises", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_unknown_ammeter_raises", "doc": "A name that is not in the config gives a clear error that lists the known names.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.002477128999942124, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTest::test_run_all_tests_every_ammeter", "file": "tests/test_framework_integration.py", "cls": "TestRunTest", "name": "test_run_all_tests_every_ammeter", "doc": "run_all returns one result for each ammeter in the config.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.24460962000000563, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTestFailures::test_wrong_command_fails_every_sample", "file": "tests/test_framework_integration.py", "cls": "TestRunTestFailures", "name": "test_wrong_command_fails_every_sample", "doc": "A wrong command in the config makes every sample fail, and the result says so.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.08317116000006308, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTestFailures::test_no_emulator_on_port_fails_every_sample", "file": "tests/test_framework_integration.py", "cls": "TestRunTestFailures", "name": "test_no_emulator_on_port_fails_every_sample", "doc": "A port with no emulator makes every sample fail with a connection error.", "markers": ["framework", "integration", "network"], "outcome": "passed", "duration": 0.0028079779999643506, "message": ""}, {"nodeid": "tests/test_framework_integration.py::TestRunTestTiming::test_duration_matches_the_plan", "file": "tests/test_framework_integration.py", "cls": "TestRunTestTiming", "name": "test_duration_matches_the_plan", "doc": "N samples have N - 1 gaps between them, so the run takes (N - 1) * interval.", "markers": ["framework", "integration", "timing"], "outcome": "passed", "duration": 0.0831943670000328, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestPytestReport::test_no_report_without_the_option", "file": "tests/test_pytest_report.py", "cls": "TestPytestReport", "name": "test_no_report_without_the_option", "doc": "Without --report nothing is written, normal test runs stay as they were.", "markers": ["report"], "outcome": "passed", "duration": 0.06841781299999639, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestPytestReport::test_report_holds_every_outcome", "file": "tests/test_pytest_report.py", "cls": "TestPytestReport", "name": "test_report_holds_every_outcome", "doc": "--report writes one file with the outcome, docstring and markers of every test.", "markers": ["report"], "outcome": "passed", "duration": 0.4952340559999584, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestPytestReport::test_failure_message_is_kept", "file": "tests/test_pytest_report.py", "cls": "TestPytestReport", "name": "test_failure_message_is_kept", "doc": "The report shows why a test failed.", "markers": ["report"], "outcome": "passed", "duration": 0.4921747019999998, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestPytestReport::test_report_has_the_ammeter_charts", "file": "tests/test_pytest_report.py", "cls": "TestPytestReport", "name": "test_report_has_the_ammeter_charts", "doc": "The same page as main.py: a real measurement of every ammeter is part of the pytest report.", "markers": ["report"], "outcome": "passed", "duration": 0.47575742699996226, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestPytestReport::test_show_report_opens_the_browser", "file": "tests/test_pytest_report.py", "cls": "TestPytestReport", "name": "test_show_report_opens_the_browser", "doc": "--show-report also opens the report, the browser call is replaced so nothing really opens.", "markers": ["report"], "outcome": "passed", "duration": 0.47600699400004487, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestReportMeasurement::test_sample_count_comes_from_the_main_sampling_settings", "file": "tests/test_pytest_report.py", "cls": "TestReportMeasurement", "name": "test_sample_count_comes_from_the_main_sampling_settings", "doc": "Changing testing.sampling in config.yaml changes the pytest report too, only the rate is faster.", "markers": ["network", "report"], "outcome": "passed", "duration": 0.4893136430000027, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestReportMeasurement::test_report_samples_option_overrides_the_config", "file": "tests/test_pytest_report.py", "cls": "TestReportMeasurement", "name": "test_report_samples_option_overrides_the_config", "doc": "--report-samples wins over the config.", "markers": ["network", "report"], "outcome": "passed", "duration": 0.39957555600000205, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestReportMeasurement::test_simulate_errors_reaches_the_report_measurement", "file": "tests/test_pytest_report.py", "cls": "TestReportMeasurement", "name": "test_simulate_errors_reaches_the_report_measurement", "doc": "With simulate_errors the report measurement uses the error simulation, and the results say so.", "markers": ["network", "report"], "outcome": "passed", "duration": 0.4304257649999954, "message": ""}, {"nodeid": "tests/test_pytest_report.py::TestReportMeasurement::test_without_the_option_the_report_measurement_is_healthy", "file": "tests/test_pytest_report.py", "cls": "TestReportMeasurement", "name": "test_without_the_option_the_report_measurement_is_healthy", "doc": "A normal pytest report never uses the simulation, even when config.yaml has it switched on.", "markers": ["network", "report"], "outcome": "passed", "duration": 0.42960529999999153, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_expected_mean_is_inside_the_range[greenlee]", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_expected_mean_is_inside_the_range[greenlee]", "doc": "The theoretical mean must lie between the lowest and highest possible current.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.00032310699998561176, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_expected_mean_is_inside_the_range[entes]", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_expected_mean_is_inside_the_range[entes]", "doc": "The theoretical mean must lie between the lowest and highest possible current.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.00023462299998300296, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_expected_mean_is_inside_the_range[circutor]", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_expected_mean_is_inside_the_range[circutor]", "doc": "The theoretical mean must lie between the lowest and highest possible current.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.00025765899994212305, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_range_matches_the_tests[greenlee]", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_range_matches_the_tests[greenlee]", "doc": "The report uses the same ranges as the emulator tests, both come from the README.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0002742250000551394, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_range_matches_the_tests[entes]", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_range_matches_the_tests[entes]", "doc": "The report uses the same ranges as the emulator tests, both come from the README.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0002636820000248008, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_range_matches_the_tests[circutor]", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_range_matches_the_tests[circutor]", "doc": "The report uses the same ranges as the emulator tests, both come from the README.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0003370809999410085, "message": ""}, {"nodeid": "tests/test_report.py::TestAmmeterInfo::test_unknown_ammeter_gets_defaults", "file": "tests/test_report.py", "cls": "TestAmmeterInfo", "name": "test_unknown_ammeter_gets_defaults", "doc": "An ammeter that is not listed still gets a label and a color, and no theory.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0005231589998970776, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_contains_every_ammeter_with_its_details", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_contains_every_ammeter_with_its_details", "doc": "Each result becomes one ammeter entry with label, theory, samples and statistics.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.00026275700002997837, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_samples_keep_failures", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_samples_keep_failures", "doc": "A failed sample stays in the data with no value and its error message.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.00021271499997510546, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_sampling_plan_and_environment", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_sampling_plan_and_environment", "doc": "The sampling plan and the environment come from the results.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0005549299999643154, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_history_leaves_out_runs_without_values", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_history_leaves_out_runs_without_values", "doc": "Earlier runs where every sample failed have no numbers, so they are not in the history.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0004225419999670521, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_no_results_raises", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_no_results_raises", "doc": "A report without any ammeter result and without test results makes no sense.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0002234510000107548, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_test_results_are_added", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_test_results_are_added", "doc": "pytest results go into the same data, next to the ammeters.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0001988359999813838, "message": ""}, {"nodeid": "tests/test_report.py::TestBuildReportData::test_tests_without_measurement", "file": "tests/test_report.py", "cls": "TestBuildReportData", "name": "test_tests_without_measurement", "doc": "If the measurement could not run, the report still shows the test results and why.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0001745340000525175, "message": ""}, {"nodeid": "tests/test_report.py::TestGenerateReport::test_writes_a_complete_html_file", "file": "tests/test_report.py", "cls": "TestGenerateReport", "name": "test_writes_a_complete_html_file", "doc": "The file is created, named after the run, and every placeholder was filled in.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0014005680000082066, "message": ""}, {"nodeid": "tests/test_report.py::TestGenerateReport::test_data_in_the_page_matches_the_results", "file": "tests/test_report.py", "cls": "TestGenerateReport", "name": "test_data_in_the_page_matches_the_results", "doc": "The data written into the page can be read back and holds the run.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0012445039999988694, "message": ""}, {"nodeid": "tests/test_report.py::TestGenerateReport::test_pytest_report_file_name", "file": "tests/test_report.py", "cls": "TestGenerateReport", "name": "test_pytest_report_file_name", "doc": "The pytest report gets its own prefix, so it is not mixed up with the reports of main.py.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.001120028000059392, "message": ""}, {"nodeid": "tests/test_report.py::TestGenerateReport::test_report_without_any_successful_sample", "file": "tests/test_report.py", "cls": "TestGenerateReport", "name": "test_report_without_any_successful_sample", "doc": "A run where everything failed still produces a report, it is the most important one to read.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0014924069999437961, "message": ""}, {"nodeid": "tests/test_report.py::TestGenerateReport::test_error_text_cannot_break_the_page", "file": "tests/test_report.py", "cls": "TestGenerateReport", "name": "test_error_text_cannot_break_the_page", "doc": "An error message containing <\/script> must not end the script tag of the page.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0006475320000163265, "message": ""}, {"nodeid": "tests/test_report.py::TestOpenReport::test_opens_the_file_in_the_browser", "file": "tests/test_report.py", "cls": "TestOpenReport", "name": "test_opens_the_file_in_the_browser", "doc": "The default browser is asked to open the report as a file URI, no real browser is started.", "markers": ["report", "unit"], "outcome": "passed", "duration": 0.0010356589999673815, "message": ""}, {"nodeid": "tests/test_result_store.py::TestRunId::test_run_id_format", "file": "tests/test_result_store.py", "cls": "TestRunId", "name": "test_run_id_format", "doc": "The id starts with the date and time, so sorting by id sorts by time.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.00017472600001156025, "message": ""}, {"nodeid": "tests/test_result_store.py::TestRunId::test_run_ids_are_unique", "file": "tests/test_result_store.py", "cls": "TestRunId", "name": "test_run_ids_are_unique", "doc": "Many ids created in the same second do not clash.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.00048030499999640597, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_save_creates_json_file_named_after_run_id", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_save_creates_json_file_named_after_run_id", "doc": "One file per run, named after the run id, containing valid JSON.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0008600310000588252, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_load_returns_exactly_what_was_saved", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_load_returns_exactly_what_was_saved", "doc": "Save and load lose nothing: the loaded result equals the original, failed samples included.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0009161570000060237, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_load_unknown_run_raises", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_load_unknown_run_raises", "doc": "Loading a run that was never saved gives a clear error with the run id.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0006252480000625837, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_list_runs_is_sorted_by_time", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_list_runs_is_sorted_by_time", "doc": "Runs come back oldest first, whatever order they were saved in.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0010369939999463895, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_list_runs_filters_by_ammeter", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_list_runs_filters_by_ammeter", "doc": "Only the runs of the requested ammeter are returned.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0011891309999896293, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_load_history_leaves_out_the_current_runs", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_load_history_leaves_out_the_current_runs", "doc": "The history of an ammeter is its earlier runs, newest last, without the runs of this session.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0013862619999827075, "message": ""}, {"nodeid": "tests/test_result_store.py::TestResultStore::test_list_runs_on_empty_store", "file": "tests/test_result_store.py", "cls": "TestResultStore", "name": "test_list_runs_on_empty_store", "doc": "A store with no saved runs returns an empty list instead of failing.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0004954870000801748, "message": ""}, {"nodeid": "tests/test_result_store.py::TestCompare::test_table_has_header_and_one_row_per_run", "file": "tests/test_result_store.py", "cls": "TestCompare", "name": "test_table_has_header_and_one_row_per_run", "doc": "A header, a separator line and one line for each result.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.00027227800001128344, "message": ""}, {"nodeid": "tests/test_result_store.py::TestCompare::test_failed_run_shows_dashes", "file": "tests/test_result_store.py", "cls": "TestCompare", "name": "test_failed_run_shows_dashes", "doc": "A run where every sample failed has no numbers, so the table shows dashes instead of crashing.", "markers": ["results", "unit"], "outcome": "passed", "duration": 0.0001924670000335027, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_valid_settings[10-None-2-10-0.5]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_valid_settings[10-None-2-10-0.5]", "doc": "Any two of the three parameters give the right plan.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.000512196999977732, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_valid_settings[None-5-2-10-0.5]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_valid_settings[None-5-2-10-0.5]", "doc": "Any two of the three parameters give the right plan.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00045184000003928304, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_valid_settings[10-5-None-10-0.5]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_valid_settings[10-5-None-10-0.5]", "doc": "Any two of the three parameters give the right plan.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00033378100005165834, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_valid_settings[10-5-2-10-0.5]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_valid_settings[10-5-2-10-0.5]", "doc": "Any two of the three parameters give the right plan.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00037067999994633283, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_invalid_settings[10-None-None-at least two]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_invalid_settings[10-None-None-at least two]", "doc": "Invalid sampling settings raise a clear ValueError.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00040564299996503905, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_invalid_settings[None-None-None-at least two]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_invalid_settings[None-None-None-at least two]", "doc": "Invalid sampling settings raise a clear ValueError.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00040189800006373844, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_invalid_settings[0-None-2-must be positive]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_invalid_settings[0-None-2-must be positive]", "doc": "Invalid sampling settings raise a clear ValueError.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00028526599999167956, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_invalid_settings[10-None--1-must be positive]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_invalid_settings[10-None--1-must be positive]", "doc": "Invalid sampling settings raise a clear ValueError.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.0004266919999622587, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_invalid_settings[10-3-2-Inconsistent]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_invalid_settings[10-3-2-Inconsistent]", "doc": "Invalid sampling settings raise a clear ValueError.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.0003840969999373556, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_invalid_settings[None-0.4-2-less than one]", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_invalid_settings[None-0.4-2-less than one]", "doc": "Invalid sampling settings raise a clear ValueError.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.0003178040000193505, "message": ""}, {"nodeid": "tests/test_sampler.py::TestResolveSampling::test_from_config_reads_the_config_keys", "file": "tests/test_sampler.py", "cls": "TestResolveSampling", "name": "test_from_config_reads_the_config_keys", "doc": "The sampler is built from a dictionary shaped like the config section.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.00017703700001447942, "message": ""}, {"nodeid": "tests/test_sampler.py::TestSamplerRun::test_returns_all_samples_in_order", "file": "tests/test_sampler.py", "cls": "TestSamplerRun", "name": "test_returns_all_samples_in_order", "doc": "Every reply becomes a sample, in the order it was received.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.020425672000044415, "message": ""}, {"nodeid": "tests/test_sampler.py::TestSamplerRun::test_records_failure_and_continues", "file": "tests/test_sampler.py", "cls": "TestSamplerRun", "name": "test_records_failure_and_continues", "doc": "A failed measurement is recorded and the sampling goes on.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.020430508999993435, "message": ""}, {"nodeid": "tests/test_sampler.py::TestSamplerRun::test_does_not_hide_unexpected_errors", "file": "tests/test_sampler.py", "cls": "TestSamplerRun", "name": "test_does_not_hide_unexpected_errors", "doc": "Only ammeter errors are caught, a real bug in the code must still stop the run.", "markers": ["sampler", "unit"], "outcome": "passed", "duration": 0.0003557229999842093, "message": ""}, {"nodeid": "tests/test_sampler.py::TestSamplerTiming::test_follows_the_schedule", "file": "tests/test_sampler.py", "cls": "TestSamplerTiming", "name": "test_follows_the_schedule", "doc": "Each sample starts at its planned time.", "markers": ["sampler", "timing"], "outcome": "passed", "duration": 0.4007991129999482, "message": ""}, {"nodeid": "tests/test_sampler.py::TestSamplerTiming::test_slow_measurements_do_not_cause_drift", "file": "tests/test_sampler.py", "cls": "TestSamplerTiming", "name": "test_slow_measurements_do_not_cause_drift", "doc": "Time spent measuring is absorbed by the wait, so the delay does not add up.", "markers": ["sampler", "timing"], "outcome": "passed", "duration": 0.441107063000004, "message": ""}]}};
+const fmt = Charts.fmt;
+const valid = DATA.ammeters.filter((a) => a.stats.count > 0);
+const ranked = Report.ranking(DATA);
+const best = ranked[0];
+const worst = ranked.length > 1 ? ranked[ranked.length - 1] : null;
+
+/** Make text safe to put inside HTML, error messages can contain any character. */
+const escape = (text) => String(text || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/** Samples whose value lies outside the range the ammeter can physically return, a sign of a wrong reading. */
+const outOfRange = (a) => (a.range ? a.samples.filter((s) => s.v !== null && (s.v < a.range[0] || s.v > a.range[1])) : []);
+/** Readable list of the simulated faults of an ammeter, like 'no reply 5% · spike 3%'. */
+const faultText = (f) => ['no_reply', 'invalid_reply', 'delay', 'spike'].filter((k) => f[k] > 0).map((k) => `${k.replace('_', ' ')} ${Math.round(f[k] * 1000) / 10}%`).join(' · ');
+const simulated = DATA.ammeters.some((a) => a.faults);
+
+/** Hide a tile that has nothing to show, independent of the checkboxes. */
+const noData = (id) => document.getElementById(id).classList.add('no-data');
+
+document.querySelectorAll('[data-theme-toggle]').forEach((b) => { b.innerHTML = Report.themeIcon; });
+if (DATA.tests) document.title = 'Ammeter Test Report · pytest';
+
+const TD = DATA.tests || null;
+const tiles = [['hero', 'Verdict'], ['podium', 'Podium'], ['kpis', 'Key numbers'], ['meters', 'Ammeter tiles'], ['overlay', 'One scale chart'], ['spread', 'Spread'], ['accuracy', 'Accuracy'], ['history', 'History'], ['table', 'Statistics table'], ['failures', 'Failed and out-of-range samples']]
+  .concat(TD ? [['test-rate', 'Test pass rate'], ['test-files', 'Tests by file'], ['test-markers', 'Tests by marker'], ['test-slowest', 'Slowest tests'], ['test-failures', 'Failed tests'], ['test-list', 'All tests']] : []);
+document.getElementById('opts').innerHTML = tiles.map(([id, label]) => `<label class="opt">${label}<input type="checkbox" data-toggle="${id}" checked></label>`).join('');
+const panel = document.getElementById('panel');
+document.getElementById('settings-btn').addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('open'); });
+document.addEventListener('click', (e) => { if (!panel.contains(e.target)) panel.classList.remove('open'); });
+
+// Verdict.
+const testBad = TD ? TD.totals.failed + TD.totals.error : 0;
+const testChip = TD ? `<span>pytest ${TD.totals.passed}/${TD.totals.total} passed${testBad ? ` · ${testBad} failed` : ''}</span>` : '';
+const samplingChip = DATA.sampling ? `<span>${DATA.sampling.measurements_count} samples · ${DATA.sampling.frequency_hz} Hz</span>` : '';
+const simulationChip = simulated ? '<span>⚠ error simulation on</span>' : '';
+const chips = `<div class="chips"><span>${DATA.generated_at.replace('T', ' ')}</span>${simulationChip}${samplingChip}${testChip}<span>Python ${DATA.environment.python_version}</span></div>`;
+const hero = document.getElementById('hero');
+if (!DATA.ammeters.length) {
+  hero.classList.add('failed');
+  hero.innerHTML = `<div class="k">Verdict</div><h1>Measurement could not run</h1><p>${escape(DATA.measurement_error || 'No ammeter results.')}</p>${chips}`;
+} else if (!best) {
+  hero.classList.add('failed');
+  hero.innerHTML = `<div class="k">Verdict</div><h1>No successful measurements</h1><p>Every sample of every ammeter failed. Check that the emulators are running and that the ports and commands in config.yaml are correct. The failed samples are listed at the bottom of this report.</p>${chips}`;
+} else {
+  const skew = worst ? Report.skew(worst) : null;
+  const tail = worst ? ` ${worst.label} varies the most${skew && skew > 1.5 ? `, with rare very large readings pulling its mean to ${fmt(skew, 1)}× its median` : ` at ${fmt(worst.stats.cv_percent, 1)}%`}.` : '';
+  hero.innerHTML = `<div class="k">Verdict</div><h1>${best.label} is the most ${ranked.length > 1 ? 'reliable' : 'consistent'} ammeter</h1><p>${best.method} readings vary by ${fmt(best.stats.cv_percent, 1)}% around their mean${ranked.length > 1 ? `, the tightest of the ${ranked.length}` : ''}.${tail}</p>${chips}`;
+}
+
+// Podium: second place on the left, winner in the middle, third on the right.
+if (!ranked.length) {
+  noData('podium-tile');
+  // Without a podium the verdict takes the whole row.
+  hero.classList.replace('s8', 's12');
+} else {
+  const order = [ranked[1], ranked[0], ranked[2]].filter(Boolean);
+  const heights = { 0: 145, 1: 105, 2: 70 };
+  document.getElementById('podium').innerHTML = order.map((a) => {
+    const place = ranked.indexOf(a);
+    return `<div class="step"><div class="nm" style="color:${a.color}">${a.label}</div><div class="cv">${fmt(a.stats.cv_percent, 1)}%</div><div class="bar" style="height:${heights[place]}px;background:linear-gradient(180deg, ${a.color}, color-mix(in srgb, ${a.color} 60%, #000))">${place + 1}</div></div>`;
+  }).join('');
+}
+
+// Key numbers.
+const total = DATA.ammeters.reduce((n, a) => n + a.samples.length, 0);
+const failed = DATA.ammeters.reduce((n, a) => n + a.stats.failed_count, 0);
+document.getElementById('k-samples').textContent = total;
+document.getElementById('k-samples-s').textContent = DATA.sampling ? `${DATA.sampling.measurements_count} per ammeter, every ${DATA.sampling.interval_seconds} s` : 'no measurement';
+document.getElementById('k-failed').textContent = failed;
+document.getElementById('k-failed').classList.toggle('bad', failed > 0);
+const strangeTotal = DATA.ammeters.reduce((n, a) => n + outOfRange(a).length, 0);
+const failedHint = failed ? 'recorded and skipped, the run went on' : 'every sample returned a value';
+document.getElementById('k-failed-s').innerHTML = strangeTotal ? `${failedHint} · <span class="num-warn">${strangeTotal} out of range</span>` : failedHint;
+const offsets = DATA.sampling ? DATA.ammeters.flatMap((a) => a.samples.map((s) => Math.abs(s.t - s.i * DATA.sampling.interval_seconds))) : [];
+document.getElementById('k-timing').textContent = offsets.length ? `${(Math.max(...offsets) * 1000).toFixed(1)} ms` : '–';
+
+if (!DATA.ammeters.length) {
+  ['podium-tile', 'overlay-tile', 'spread-tile', 'accuracy-tile', 'failures-tile'].forEach((id) => document.getElementById(id).classList.add('no-data'));
+  document.querySelectorAll('[data-chart="history"], [data-chart="table"]').forEach((tile) => tile.classList.add('no-data'));
+}
+
+// One tile per ammeter, sized so the tiles always fill a row.
+const span = DATA.ammeters.length === 1 ? 's12' : DATA.ammeters.length === 2 ? 's6' : 's4';
+document.getElementById('meter-tiles').innerHTML = DATA.ammeters.map((a) => {
+  const head = `<div class="meter-head"><b>${a.label}</b><span class="tag">${a.formula}</span></div>`;
+  if (a.stats.count === 0) {
+    const firstError = (a.samples.find((s) => s.err) || {}).err || '';
+    return `<div class="t ${span} meter-tile" data-chart="meters" style="--c:${a.color}">${head}${a.faults ? `<div class="warn">Simulated faults: <b>${faultText(a.faults)}</b></div>` : ''}<div class="empty"><b>${a.samples.length === 1 ? 'The only sample failed' : `All ${a.samples.length} samples failed`}</b>${escape(firstError)}</div></div>`;
+  }
+  const strange = outOfRange(a).length;
+  const warnings = (a.faults ? `<div>Simulated faults: <b>${faultText(a.faults)}</b></div>` : '') +
+    (strange ? `<div><b>${strange} sample${strange === 1 ? '' : 's'} out of range</b> (possible ${fmt(a.range[0])} - ${fmt(a.range[1])} A)</div>` : '');
+  return `<div class="t ${span} meter-tile" data-chart="meters" style="--c:${a.color}">${head}
+    ${warnings ? `<div class="warn">${warnings}</div>` : ''}
+    <div class="meter-nums"><div><small>mean</small><b>${fmt(a.stats.mean)}</b></div><div><small>median</small><b>${fmt(a.stats.median)}</b></div><div><small>cv</small><b>${fmt(a.stats.cv_percent, 1)}%</b></div></div>
+    <div id="line-${a.name}"></div><div id="histo-${a.name}"></div></div>`;
+}).join('');
+valid.forEach((a) => {
+  Charts.line(document.getElementById(`line-${a.name}`), { area: true, height: 150, unit: '', xUnit: 's', series: [{ name: a.label, color: a.color, points: Report.points(a) }] });
+  Charts.histogram(document.getElementById(`histo-${a.name}`), { values: a.samples.map((s) => s.v), color: a.color, unit: ' A', bins: 12, height: 120, refLines: [{ x: a.stats.median, label: 'median', color: 'var(--muted)' }] });
+});
+
+// Comparison charts, only for ammeters with values.
+if (!valid.length) {
+  noData('overlay-tile');
+  noData('spread-tile');
+} else {
+  Charts.line(document.getElementById('overlay'), { height: 270, unit: '×', xUnit: ' s', refLines: [{ y: 1, label: 'mean', color: 'var(--muted)' }],
+    series: valid.map((a) => ({ name: a.label, color: a.color, points: a.samples.map((s) => ({ x: s.t, y: s.v === null ? null : s.v / a.stats.mean, label: `#${s.i} · ${s.v === null ? 'failed' : fmt(s.v) + ' A'}` })) })) });
+  Charts.box(document.getElementById('box'), { height: 290, refLine: 1, unit: '×', groups: valid.map((a) => ({ label: a.label, color: a.color, values: Report.normalized(a) })) });
+}
+
+const accuracy = DATA.ammeters.filter((a) => Report.accuracyError(a) !== null);
+if (!accuracy.length) {
+  noData('accuracy-tile');
+} else {
+  Charts.bars(document.getElementById('acc'), { horizontal: true, unit: '%', digits: 1,
+    items: accuracy.map((a) => ({ label: a.label, value: Math.abs(Report.accuracyError(a)), color: a.color, note: `measured ${fmt(a.stats.mean)} A · theory ${fmt(a.expected_mean)} A` })) });
+}
+
+// History: earlier runs, then this run as the last point.
+const historySeries = valid.map((a) => {
+  const runs = (DATA.history[a.name] || []).concat([{ run_id: a.run_id, started_at: a.started_at, mean: a.stats.mean, cv_percent: a.stats.cv_percent, current: true }]);
+  return { name: a.label, color: a.color, points: runs.map((h, i) => ({ x: i, y: h.cv_percent, label: `${h.current ? '<b>this run</b> · ' : ''}${h.started_at.replace('T', ' ')}<br>${h.run_id}<br>mean ${fmt(h.mean)} A · cv ${fmt(h.cv_percent, 1)}%` })) };
+});
+if (historySeries.every((s) => s.points.length < 2)) {
+  document.getElementById('hist').innerHTML = '<div class="empty">No earlier runs saved yet.<br>Run the tests again to compare this run with the previous ones.</div>';
+} else {
+  Charts.line(document.getElementById('hist'), { height: 220, unit: '%', zeroBased: true, xFormat: (i) => `run ${Math.round(i) + 1}`, series: historySeries.filter((s) => s.points.length > 1) });
+}
+
+// Statistics table, best ammeter first and failed ammeters last.
+const tableOrder = ranked.concat(DATA.ammeters.filter((a) => !ranked.includes(a)));
+document.getElementById('table').innerHTML = `<thead><tr><th>Ammeter</th><th>Run id</th><th>Port</th><th>n</th><th>Failed</th><th>Out of range</th><th>Mean</th><th>Median</th><th>Std</th><th>Min</th><th>Max</th><th>CV</th><th>Theory</th></tr></thead><tbody>` +
+  tableOrder.map((a) => `<tr><td><b style="color:${a.color}">${a.label}</b></td><td>${a.run_id}</td><td>${a.port ?? '–'}</td><td>${a.stats.count}</td><td class="${a.stats.failed_count ? 'num-bad' : ''}">${a.stats.failed_count}</td><td class="${outOfRange(a).length ? 'num-warn' : ''}">${outOfRange(a).length || 0}</td><td>${fmt(a.stats.mean)}</td><td>${fmt(a.stats.median)}</td><td>${fmt(a.stats.std)}</td><td>${fmt(a.stats.min_value)}</td><td>${fmt(a.stats.max_value)}</td><td>${a.stats.cv_percent === null ? '–' : fmt(a.stats.cv_percent, 1) + '%'}</td><td>${fmt(a.expected_mean)}</td></tr>`).join('') + '</tbody>';
+
+// Failed samples, the tile disappears when there are none.
+const failures = DATA.ammeters.flatMap((a) => a.samples.filter((s) => s.v === null).map((s) => ({ a, s, kind: 'bad', err: s.err })))
+  .concat(DATA.ammeters.flatMap((a) => outOfRange(a).map((s) => ({ a, s, kind: 'warn', err: `${fmt(s.v)} A, possible ${fmt(a.range[0])} - ${fmt(a.range[1])} A` }))))
+  .sort((x, y) => x.a.name.localeCompare(y.a.name) || x.s.i - y.s.i);
+if (!failures.length) {
+  noData('failures-tile');
+} else {
+  document.getElementById('failures').innerHTML = `<thead><tr><th>Ammeter</th><th>Sample</th><th>Time</th><th>Kind</th><th>Error</th></tr></thead><tbody>` +
+    failures.map(({ a, s, kind, err }) => `<tr class="row-${kind}"><td><b style="color:${a.color}">${a.label}</b></td><td>#${s.i}</td><td>${s.t.toFixed(3)} s</td><td><span class="tag ${kind}">${kind === 'bad' ? 'failed' : 'out of range'}</span></td><td class="wrap-text">${escape(err)}</td></tr>`).join('') + '</tbody>';
+}
+
+if (TD) renderTests(TD);
+
+/** Draw every test result tile of the pytest report. */
+function renderTests(td) {
+  const COLORS = { passed: '#10b981', failed: '#ef4444', error: '#f97316', skipped: '#94a3b8', xfailed: '#8b5cf6', xpassed: '#8b5cf6', 'not run': '#94a3b8' };
+  const BAD = ['failed', 'error'];
+  const T = td.totals;
+  const bad = T.failed + T.error;
+  const seconds = (v) => v < 1 ? `${Math.round(v * 1000)} ms` : `${v.toFixed(2)} s`;
+  ['tests-section', 'k-tests-tile', 'test-rate-tile', 'test-files-tile', 'test-markers-tile', 'test-slowest-tile', 'test-list-tile'].forEach((id) => document.getElementById(id).classList.remove('no-data'));
+  // Four key number tiles in one row instead of three.
+  document.querySelectorAll('.kpi').forEach((tile) => tile.classList.replace('s4', 's3'));
+
+  document.getElementById('k-tests').textContent = `${T.passed}/${T.total}`;
+  document.getElementById('k-tests').classList.add(bad ? 'bad' : 'good');
+  document.getElementById('k-tests-s').textContent = bad ? `${bad} failed · ${seconds(td.duration_seconds)}` : `all passed · ${seconds(td.duration_seconds)}`;
+  document.getElementById('tests-section-s').textContent = `${T.total} tests · pytest ${td.pytest_version} · ${seconds(td.duration_seconds)}`;
+
+  document.getElementById('test-verdict').textContent = T.total === 0 ? 'No tests were run.' : bad ? `${bad} of ${T.total} tests failed.` : `All ${T.passed} tests passed.`;
+  Charts.ring(document.getElementById('test-ring'), T.total ? T.passed / T.total : 0, bad ? COLORS.failed : COLORS.passed, T.total ? `${Math.round(T.passed / T.total * 100)}%` : '–');
+  document.getElementById('test-legend').innerHTML = ['passed', 'failed', 'error', 'skipped', 'xfailed', 'xpassed'].filter((o) => T[o] || o === 'passed' || o === 'failed')
+    .map((o) => `<span><i style="background:${COLORS[o]}"></i>${o}<b>${T[o]}</b></span>`).join('');
+  document.getElementById('test-cmd').innerHTML = `<code>${escape(td.command)}</code>`;
+
+  /** One row with a stacked bar of passed, failed and other tests. */
+  const stackRow = (label, tests) => {
+    const passed = tests.filter((t) => t.outcome === 'passed').length;
+    const failed = tests.filter((t) => BAD.includes(t.outcome)).length;
+    const pct = (n) => n / tests.length * 100;
+    return `<div class="row" title="${escape(label)}"><span class="label">${escape(label)}</span><span class="val">${passed}/${tests.length}${failed ? ` · <b style="color:${COLORS.failed}">${failed} failed</b>` : ''}</span>
+      <div class="track"><i style="width:${pct(passed)}%;background:${COLORS.passed}"></i><i style="width:${pct(failed)}%;background:${COLORS.failed}"></i><i style="width:${pct(tests.length - passed - failed)}%;background:${COLORS.skipped}"></i></div></div>`;
+  };
+  const group = (key) => td.tests.reduce((map, t) => { [].concat(key(t)).forEach((k) => { (map[k] = map[k] || []).push(t); }); return map; }, {});
+  const byFile = group((t) => t.file);
+  document.getElementById('test-files').innerHTML = Object.entries(byFile).map(([f, tests]) => stackRow(f.replace(/^tests\//, ''), tests)).join('') || '<div class="empty">No tests</div>';
+  const byMarker = group((t) => t.markers);
+  const markerNames = Object.keys(byMarker).sort((a, b) => byMarker[b].length - byMarker[a].length);
+  document.getElementById('test-markers').innerHTML = markerNames.map((m) => stackRow(m, byMarker[m])).join('') || '<div class="empty">No markers used</div>';
+
+  const slowest = [...td.tests].sort((a, b) => b.duration - a.duration).slice(0, 10);
+  const longest = slowest.length ? slowest[0].duration || 1 : 1;
+  document.getElementById('test-slowest').innerHTML = slowest.map((t) => `<div class="row" title="${escape(t.nodeid)}"><span class="label">${escape((t.cls ? t.cls + ' › ' : '') + t.name)}</span><span class="val">${seconds(t.duration)}</span>
+    <div class="track"><i style="width:${t.duration / longest * 100}%;background:${COLORS[t.outcome]}"></i></div></div>`).join('') || '<div class="empty">No tests</div>';
+
+  const failedTests = td.tests.filter((t) => BAD.includes(t.outcome));
+  if (failedTests.length) {
+    document.getElementById('test-failures-tile').classList.remove('no-data');
+    document.getElementById('test-failures').innerHTML = failedTests.map((t) => `<div class="test"><span class="pill" style="background:${COLORS[t.outcome]}">${t.outcome}</span><div><div class="name">${escape(t.nodeid)}</div><div class="doc">${escape(t.doc)}</div><pre>${escape(t.message)}</pre></div><span class="dur">${seconds(t.duration)}</span></div>`).join('');
+  }
+
+  const outcomes = ['passed', 'failed', 'error', 'skipped', 'xfailed', 'xpassed'].filter((o) => T[o]);
+  document.getElementById('test-filters').innerHTML = outcomes.map((o) => `<label class="fchip"><input type="checkbox" data-outcome="${o}" checked><i style="background:${COLORS[o]}"></i>${o} ${T[o]}</label>`).join('') +
+    `<select class="search" id="marker-filter"><option value="">All markers</option>${markerNames.map((m) => `<option>${escape(m)}</option>`).join('')}</select>` +
+    '<input class="search" id="test-search" placeholder="Search tests…" type="search">';
+
+  /** Draw the full list, grouped by file and class, using the current filters. */
+  const drawList = () => {
+    const shown = new Set([...document.querySelectorAll('[data-outcome]')].filter((b) => b.checked).map((b) => b.dataset.outcome));
+    const marker = document.getElementById('marker-filter').value;
+    const query = document.getElementById('test-search').value.trim().toLowerCase();
+    const visible = td.tests.filter((t) => shown.has(t.outcome) && (!marker || t.markers.includes(marker)) && (!query || (t.nodeid + ' ' + t.doc).toLowerCase().includes(query)));
+    const groups = group.call(null, (t) => t.file + (t.cls ? ' › ' + t.cls : ''));
+    document.getElementById('test-list').innerHTML = Object.entries(groups).map(([key, tests]) => {
+      const rows = tests.filter((t) => visible.includes(t));
+      if (!rows.length) return '';
+      return `<div class="group"><div class="group-title">${escape(key)}<small>${rows.length}</small></div>` +
+        rows.map((t) => `<div class="test"><span class="pill" style="background:${COLORS[t.outcome]}">${t.outcome}</span><div><div class="name">${escape(t.name)}</div>${t.doc ? `<div class="doc">${escape(t.doc)}</div>` : ''}${t.markers.length ? `<div class="marks">${t.markers.map((m) => `<span>${escape(m)}</span>`).join('')}</div>` : ''}</div><span class="dur">${seconds(t.duration)}</span>${t.message && BAD.includes(t.outcome) ? `<details><summary>Show message</summary><pre>${escape(t.message)}</pre></details>` : ''}</div>`).join('') + '</div>';
+    }).join('') || '<div class="empty">No test matches the filters.</div>';
+  };
+  document.getElementById('test-filters').addEventListener('input', drawList);
+  drawList();
+}
+
+document.getElementById('footer').textContent = `Ammeter Test Framework · ${DATA.environment.platform} · ${DATA.ammeters.length ? 'runs ' + DATA.ammeters.map((a) => a.run_id).join(', ') : 'no measurement'}`;
+
+Report.initTheme();
+Report.initToggles();
+</script>
+</body>
+</html>
